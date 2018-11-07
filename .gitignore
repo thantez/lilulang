@@ -59,3 +59,9 @@ typings/
 
 # next.js build output
 .next
+
+#antlr generated files
+.antlr
+
+# visual studio code configs
+.vscode

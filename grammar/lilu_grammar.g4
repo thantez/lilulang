@@ -329,7 +329,7 @@ relational: EQUAL | NOTEQUAL | GE | LE | GT | LT; //fixme
 
 bitwise: BITAND | BITOR | CARET; //fixme
 
-logical: OR | AND; //fixme
+logical: OR | AND;
 
 COLON : ':';
 EQUAL : '==';

@@ -1,4 +1,4 @@
-grammar lulu_grammar;
+grammar lilu_grammar;
 
 program: dcl def;
 

@@ -65,3 +65,6 @@ typings/
 
 # visual studio code configs
 .vscode
+
+# test program
+.test.txt

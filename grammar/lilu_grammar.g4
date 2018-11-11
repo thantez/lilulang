@@ -4,247 +4,125 @@ program: dcl def;
 
 //constant values
 
-const_val
-	: INT_CONST
-	| REAL_CONST
-	| BOOL_CONST
-	| STRING_CONST
-	;
-
+const_val: INT_CONST | REAL_CONST | BOOL_CONST | STRING_CONST;
 
 //types
 
-type
-	: INT
-	| BOOL
-	| FLOAT
-	| STRING
-	| ID
-	;
-
+type: INT | BOOL | FLOAT | STRING | ID;
 
 // var def
 
-ref
-	: ID
-		( 
-			LBRACK expr RBRACK
-		)*
-	;
+ref: ID ( LBRACK expr RBRACK)*;
 
-var
-	:
-		(
-			( THIS
-			| SUPER
-			) DOT
-		)? ref
-		(
-		DOT ref
-		)*
-	;
+var: ( ( THIS | SUPER) DOT)? ref ( DOT ref)*;
 
-var_val
-	: ref
-	( ASSIGN expr)?
-	;
+var_val: ref ( ASSIGN expr)?;
 
-var_def
-	: CONST? type var_val ( COMMA var_val)* SEMI
-	;
-
+var_def: CONST? type var_val ( COMMA var_val)* SEMI;
 
 //declare
 
-args
-	: type
-	( LBRACK RBRACK)*
-	| args COMMA type
-	( LBRACK RBRACK)*
-	;
+args: type ( LBRACK RBRACK)* | args COMMA type ( LBRACK RBRACK)*;
 
-	args_var
-	: type
-	( LBRACK RBRACK)* ID
-	| args_var COMMA type
-	( LBRACK RBRACK)* ID
-	;
+args_var:
+	type (LBRACK RBRACK)* ID
+	| args_var COMMA type ( LBRACK RBRACK)* ID;
 
-func_dcl
-	:
-	( LPAREN args RPAREN ASSIGN )? ID LPAREN ( args
-		| args_var
-	)? RPAREN SEMI
-	;
+func_dcl:
+	(LPAREN args RPAREN ASSIGN)? ID LPAREN (args | args_var)? RPAREN SEMI;
 
-type_dcl
-	: ID SEMI
-	;
+type_dcl: ID SEMI;
 
-ft_dcl
-	: DECLARE LBRACE 
-		( func_dcl
-		| type_dcl
-		| var_def
-		)+ RBRACE
-	;
+ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | var_def)+ RBRACE;
 
-dcl
-	: ft_dcl?
-	;
-
+dcl: ft_dcl?;
 
 //names
 
-block
-	: LBRACE
-		( var_def
-		| stmt
-		)* RBRACE
-	;
-
-
+block: LBRACE ( var_def | stmt)* RBRACE;
 
 //statement
 
-cond_stmt
-	: IF expr block (ELSE block)?
-	| SWITCH var LBRACE (CASE INT_CONST COLON block)* DEFAULT COLON block RBRACE
-	;
+cond_stmt:
+	IF expr block (ELSE block)?
+	| SWITCH var LBRACE (CASE INT_CONST COLON block)* DEFAULT COLON block RBRACE;
 
-loop_stmt
-	: FOR (type? assign)? SEMI expr SEMI assign? block
-	| WHILE expr block
-	;
+loop_stmt:
+	FOR (type? assign)? SEMI expr SEMI assign? block
+	| WHILE expr block;
 
-list
-	: LBRACK
-		( expr
-		| list
-		)
-		( COMMA
-			( expr
-			| list
-			)
-		)* RBRACK
-	;
+list: LBRACK ( expr | list) ( COMMA ( expr | list))* RBRACK;
 
-params
-	: expr
-	| expr COMMA params
-	;
+params: expr | expr COMMA params;
 
-handle_call
-	: ID LPAREN params? RPAREN
-	;
+handle_call: ID LPAREN params? RPAREN;
 
-func_call
-	: (var DOT)? handle_call
+func_call: (var DOT)? handle_call
 	| READ LPAREN var RPAREN
 	| WRITE LPAREN var RPAREN;
 
-stmt
-	: assign SEMI
+stmt:
+	assign SEMI
 	| func_call SEMI
 	| cond_stmt
 	| loop_stmt
 	| RETURN SEMI
 	| BREAK SEMI
 	| CONTINUE SEMI
-	| DESTRUCT ( LBRACK RBRACK)* ID SEMI
-	;
-
+	| DESTRUCT ( LBRACK RBRACK)* ID SEMI;
 
 //expressions
 
-expr
-	: expr binary_op expr
-	| LPAREN expr RPAREN
+// expr_subset_level_2: const_val | LPAREN expr RPAREN;
+
+// expr_subset_level_1: expr_subset_level_1 mul_div_mod expr_subset_level_2 | expr_subset_level_2;
+
+expr:
+	expr binary_op expr //Ambiguity
+	| LPAREN expr RPAREN //Ambiguity
+	//| expr add_sub expr_subset_level_1 | expr_subset_level_1
 	| unary_op expr
-	| const_val
+	| const_val //Ambiguity
 	| ALLOCATE handle_call
 	| func_call
 	| var
 	| list
-	| NIL
-	;
-
+	| NIL;
 
 //functions
 
-fun_def
-	:
-	(LPAREN args_var RPAREN ASSIGN)? FUNCTION ID LPAREN args_var? RPAREN block
-	;
+fun_def:
+	(LPAREN args_var RPAREN ASSIGN)? FUNCTION ID LPAREN args_var? RPAREN block;
 
-access_modifier
-	: PRIVATE
-	| PUBLIC
-	| PROTECTED
-	;
-	
-component
-	: access_modifier?
-	( var_def | fun_def)
-	;
+access_modifier: PRIVATE | PUBLIC | PROTECTED;
 
-type_def
-	: TYPE ID
-	( COLON ID)? LBRACE component+ RBRACE
-	;
+component: access_modifier? ( var_def | fun_def);
 
-ft_def
-	: type_def
-	| fun_def
-	;
+type_def: TYPE ID ( COLON ID)? LBRACE component+ RBRACE;
 
-def
-	: ft_def+
-	;
+ft_def: type_def | fun_def;
+
+def: ft_def+;
 
 //assignment
 
-assign
-	: 
-	( var
-		| LPAREN var
-		( COMMA var)* RPAREN
-	) ASSIGN expr
-	;
-
+assign: ( var | LPAREN var ( COMMA var)* RPAREN) ASSIGN expr;
 
 //assignment operators
 
-unary_op
-	: SUB
-	| BANG
-	| TILDE
-	; //fixme
+unary_op: SUB | BANG | TILDE; //fixme
 
-ASSIGN
-	: '='
-	;
+ASSIGN: '=';
 
-GT
-	: '>'
-	;
+GT: '>';
 
-LT
-	: '<'
-	;
+LT: '<';
 
-BANG
-	: '!'
-	;
+BANG: '!';
 
-TILDE
-	: '~'
-	;
-
+TILDE: '~';
 
 //expressions detail
-
-
 
 //keywords
 
@@ -277,53 +155,41 @@ TYPE: 'type';
 WHILE: 'while';
 WRITE: 'write';
 FUNCTION: 'function';
-// FALSE: 'false';
-// TRUE: 'true';
-
+// FALSE: 'false'; TRUE: 'true';
 
 // literals
 
-REAL_CONST
-	: INT_CONST DOT INT_CONST
-	;
+REAL_CONST: INT_CONST DOT INT_CONST;
 
-STRING_CONST
-	: '"' .*? '"'
-	;
+STRING_CONST: '"' .*? '"';
 
-BOOL_CONST
-	: 'true'
-	| 'false'
-	;
+BOOL_CONST: 'true' | 'false';
 
-fragment
-DIGIT
-	: [0-9]
-	;
+fragment DIGIT: [0-9];
 
-INT_CONST
-	: ('0x')? DIGIT+
-	;
-
+INT_CONST: ('0x')? DIGIT+;
 
 //separators
 
-LPAREN : '(';
-RPAREN : ')';
-LBRACE : '{';
-RBRACE : '}';
-LBRACK : '[';
-RBRACK : ']';
-SEMI : ';';
-COMMA : ',';
-DOT : '.';
-
+LPAREN: '(';
+RPAREN: ')';
+LBRACE: '{';
+RBRACE: '}';
+LBRACK: '[';
+RBRACK: ']';
+SEMI: ';';
+COMMA: ',';
+DOT: '.';
 
 //operators
 
 binary_op: arithmetic | relational; //fixme
 
-arithmetic: ADD | SUB | MUL | DIV | MOD; //fixme
+arithmetic: ADD | MUL | DIV | MOD | SUB; //fixme
+
+//add_sub: (ADD | SUB) mul_div_mod?;
+
+//mul_div_mod: MUL | DIV | MOD;
 
 relational: EQUAL | NOTEQUAL | GE | LE | GT | LT; //fixme
 
@@ -331,56 +197,34 @@ bitwise: BITAND | BITOR | CARET; //fixme
 
 logical: OR | AND;
 
-COLON : ':';
-EQUAL : '==';
-LE : '<=';
-GE : '>=';
-NOTEQUAL : '!=';
-AND : '&&';
-OR : '||';
-// INC : '++';
-// DEC : '--';
-ADD : '+';
-SUB : '-';
-MUL : '*';
-DIV : '/';
-BITAND : '&';
-BITOR : '|';
-CARET : '^';
-MOD : '%';
-
+COLON: ':';
+EQUAL: '==';
+LE: '<=';
+GE: '>=';
+NOTEQUAL: '!=';
+AND: '&&';
+OR: '||';
+ADD: '+';
+SUB: '-';
+MUL: '*';
+DIV: '/';
+BITAND: '&';
+BITOR: '|';
+CARET: '^';
+MOD: '%';
 
 //ID
 
-ID
-	: LETTER_
-	( LETTER_
-	| DIGIT)*
-	;
+ID: LETTER_ ( LETTER_ | DIGIT)*;
 
-fragment
-LETTER_
-	: [A-Za-z_]
-	;
-
+fragment LETTER_: [A-Za-z_];
 
 //skip
 
-Whitespace:
-	[ \t]+ -> skip
-;
+Whitespace: [ \t]+ -> skip;
 
-Newline:
-	(
-		'\r' '\n'?
-		| '\n'
-	) -> skip
-;
+Newline: ( '\r' '\n'? | '\n') -> skip;
 
-BlockComment:
-	'%~' .*? '~%' -> skip
-;
+BlockComment: '%~' .*? '~%' -> skip;
 
-LineComment:
-	'%%' ~[\r\n]* -> skip
-;
+LineComment: '%%' ~[\r\n]* -> skip;

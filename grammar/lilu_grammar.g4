@@ -4,7 +4,12 @@ program: dcl def;
 
 //constant values
 
-const_val: (unary_op)? (INT_CONST | REAL_CONST | BOOL_CONST | STRING_CONST);
+const_val: (unary_op)? (
+		INT_CONST
+		| REAL_CONST
+		| BOOL_CONST
+		| STRING_CONST
+	);
 
 //types
 
@@ -72,9 +77,12 @@ stmt:
 	| DESTRUCT ( LBRACK RBRACK)* ID SEMI;
 
 //expressions
-expr:
-	expr (ADD | SUB) mul_div_mod
-	| mul_div_mod
+
+// TODO: Modify the orders
+parans_id_const:
+	LPAREN expr RPAREN
+	| ID
+	| const_val
 	| ALLOCATE handle_call
 	| func_call
 	| var
@@ -85,7 +93,26 @@ mul_div_mod:
 	mul_div_mod (MUL | DIV | MOD) parans_id_const
 	| parans_id_const;
 
-parans_id_const: LPAREN expr RPAREN | ID | const_val;
+add_sub: add_sub (ADD | SUB) mul_div_mod | mul_div_mod;
+
+relational_than: relational_than (LT | GT) add_sub | add_sub;
+
+relational_equals:
+	relational_equals (EQUAL | NOTEQUAL | LE | GE) relational_than
+	| relational_than;
+
+bitwise_and:
+	bitwise_and BITAND relational_equals
+	| relational_equals;
+
+bitwise_caret: bitwise_caret CARET bitwise_and | bitwise_and;
+
+bitwise_or: bitwise_or BITOR bitwise_caret | bitwise_caret;
+
+logical_and: logical_and AND bitwise_or | bitwise_or;
+
+expr: expr OR logical_and | logical_and;
+
 //functions
 
 fun_def:
@@ -152,19 +179,27 @@ TYPE: 'type';
 WHILE: 'while';
 WRITE: 'write';
 FUNCTION: 'function';
-// FALSE: 'false'; TRUE: 'true';
 
-// literals
+// Literals
 
-REAL_CONST: INT_CONST DOT INT_CONST;
+INT_CONST: '0' | [1-9] DIGITS | HEX_CONST;
 
-STRING_CONST: '"' .*? '"';
+HEX_CONST: '0' [xX] [0-9a-fA-F];
+
+REAL_CONST: (DIGITS DOT DIGITS? | DOT DIGITS) EXPONENT_PART?;
 
 BOOL_CONST: 'true' | 'false';
 
-fragment DIGIT: [0-9];
+// TODO: ~["\\\r\n] WHAT DOES IT MEAN?
+STRING_CONST: '\'' (~["\\\r\n] | ESCAPE_SEQUENCE)* '\'';
 
-INT_CONST: ('0x')? DIGIT+;
+fragment EXPONENT_PART: [eE] [+-]? DIGITS;
+
+fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\];
+
+fragment DIGITS: DIGIT+;
+
+fragment DIGIT: [0-9];
 
 //separators
 

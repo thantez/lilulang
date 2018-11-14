@@ -4,7 +4,7 @@ program: dcl def;
 
 //constant values
 
-const_val: INT_CONST | REAL_CONST | BOOL_CONST | STRING_CONST;
+const_val: (unary_op)? (INT_CONST | REAL_CONST | BOOL_CONST | STRING_CONST);
 
 //types
 
@@ -72,23 +72,20 @@ stmt:
 	| DESTRUCT ( LBRACK RBRACK)* ID SEMI;
 
 //expressions
-
-// expr_subset_level_2: const_val | LPAREN expr RPAREN;
-
-// expr_subset_level_1: expr_subset_level_1 mul_div_mod expr_subset_level_2 | expr_subset_level_2;
-
 expr:
-	expr binary_op expr //Ambiguity
-	| LPAREN expr RPAREN //Ambiguity
-	//| expr add_sub expr_subset_level_1 | expr_subset_level_1
-	| unary_op expr
-	| const_val //Ambiguity
+	expr (ADD | SUB) mul_div_mod
+	| mul_div_mod
 	| ALLOCATE handle_call
 	| func_call
 	| var
 	| list
 	| NIL;
 
+mul_div_mod:
+	mul_div_mod (MUL | DIV | MOD) parans_id_const
+	| parans_id_const;
+
+parans_id_const: LPAREN expr RPAREN | ID | const_val;
 //functions
 
 fun_def:
@@ -183,7 +180,7 @@ DOT: '.';
 
 //operators
 
-binary_op: arithmetic | relational; //fixme
+binary_op: arithmetic | relational | bitwise | logical; //fixme
 
 arithmetic: ADD | MUL | DIV | MOD | SUB; //fixme
 

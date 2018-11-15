@@ -6,6 +6,7 @@ program: dcl def;
 
 const_val: (unary_op)? (
 		INT_CONST
+		| HEX_CONST
 		| REAL_CONST
 		| BOOL_CONST
 		| STRING_CONST
@@ -189,7 +190,7 @@ STRING_CONST: '\'' (~["\\\r\n] | ESCAPE_SEQUENCE)* '\'';
 
 REAL_CONST: (DIGIT+ DOT (DIGIT+)? | DOT DIGIT+) EXPONENT_PART?;
 
-HEX_CONST: '0' [xX] [0-9a-fA-F];
+HEX_CONST: '0' [xX] [0-9a-fA-F]+;
 
 INT_CONST: DIGIT+ | HEX_CONST;
 

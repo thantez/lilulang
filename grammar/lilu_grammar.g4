@@ -180,7 +180,7 @@ fragment DIGIT: [0-9];
 
 fragment EXPONENT_PART: [eE] [+-]? DIGIT+;
 
-fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\];
+fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\] | '\\' [xX] [0-9a-fA-F] [0-9a-fA-F];
 
 BOOL_CONST: 'true' | 'false';
 

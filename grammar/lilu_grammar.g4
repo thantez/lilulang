@@ -9,8 +9,7 @@ const_val:
 		| HEX_CONST
 		| REAL_CONST
 		| BOOL_CONST
-		| STRING_CONST
-	;
+		| STRING_CONST;
 
 //types
 
@@ -179,8 +178,9 @@ FUNCTION: 'function';
 
 real_test: REAL_CONST; //todo delete test rule
 
-REAL_CONST: (INT_CONST|HEX_CONST) (DOT INT_CONST EXPONENT_PART?)?//todo accept hex after .
-           |(DOT INT_CONST (EXPONENT_PART|HEXAK)?);
+//REAL_CONST: (?!DOT)(INT_CONST|HEX_CONST)? DOT (INT_CONST EXPONENT_PART?)?//todo simplify regex
+REAL_CONST: (INT_CONST|HEX_CONST) DOT (INT_CONST EXPONENT_PART?)?//todo accept hex after .
+           | DOT INT_CONST EXPONENT_PART?;
 fragment EXPONENT_PART: [eE] [+-]? DIGIT+;
 
 HEX_CONST: '0' [xX] HEXAK;

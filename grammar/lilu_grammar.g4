@@ -4,13 +4,13 @@ program: dcl def;
 
 //constant values
 
-const_val: (unary_op)? (
+const_val:
 		INT_CONST
 		| HEX_CONST
 		| REAL_CONST
 		| BOOL_CONST
 		| STRING_CONST
-	);
+	;
 
 //types
 
@@ -43,9 +43,6 @@ ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | var_def)+ RBRACE;
 
 dcl: ft_dcl?;
 
-//names
-
-block: LBRACE ( var_def | stmt)* RBRACE;
 
 //statement
 
@@ -75,7 +72,12 @@ stmt:
 	| RETURN SEMI
 	| BREAK SEMI
 	| CONTINUE SEMI
-	| DESTRUCT ( LBRACK RBRACK)* ID SEMI;
+	| DESTRUCT ( LBRACK RBRACK )* ID SEMI;
+
+
+//block
+
+block: LBRACE ( var_def | stmt )* RBRACE;
 
 //expressions
 
@@ -90,7 +92,9 @@ parans_id_const:
 	| list
 	| NIL;
 
-mul_div_mod: parans_id_const| mul_div_mod (MUL | DIV | MOD) parans_id_const;
+unary_expr: parans_id_const | unary_op parans_id_const;
+
+mul_div_mod: unary_expr| mul_div_mod (MUL | DIV | MOD) unary_expr;
 
 add_sub: mul_div_mod | add_sub (ADD | SUB) mul_div_mod;
 

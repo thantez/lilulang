@@ -242,7 +242,7 @@ MOD: '%';
 
 ID: LETTER_ ( LETTER_ | DIGIT)*;
 
-fragment LETTER_: [A-Za-z_];
+fragment LETTER_: [A-Za-z_#];
 
 //skip
 

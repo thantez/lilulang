@@ -177,23 +177,25 @@ FUNCTION: 'function';
 
 // Literals
 
-fragment DIGIT: [0-9];
 
+
+real_test: REAL_CONST; //todo delete test rule
+
+REAL_CONST: (INT_CONST|HEX_CONST) (DOT INT_CONST EXPONENT_PART?)?//todo accept hex after .
+           |(DOT INT_CONST (EXPONENT_PART|HEXAK)?);
 fragment EXPONENT_PART: [eE] [+-]? DIGIT+;
 
-fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\] | '\\' [xX] [0-9a-fA-F] [0-9a-fA-F];
+HEX_CONST: '0' [xX] HEXAK;
+fragment HEXAK: [0-9a-fA-F]+;
+
+INT_CONST: DIGIT+;
+fragment DIGIT: [0-9];
 
 BOOL_CONST: 'true' | 'false';
 
 // TODO: ~["\\\r\n] WHAT DOES IT MEAN?
 STRING_CONST: '\'' (~["\\\r\n] | ESCAPE_SEQUENCE)* '\'';
-
-REAL_CONST: (DIGIT+ DOT (DIGIT+)? | DOT DIGIT+) EXPONENT_PART?;
-
-HEX_CONST: '0' [xX] [0-9a-fA-F]+;
-
-INT_CONST: DIGIT+;
-
+fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\] | '\\' [xX] [0-9a-fA-F] [0-9a-fA-F];
 
 //separators
 
@@ -209,19 +211,19 @@ DOT: '.';
 
 //operators
 
-binary_op: arithmetic | relational | bitwise | logical; //fixme
+//binary_op: arithmetic | relational | bitwise | logical; //fixme
 
-arithmetic: ADD | MUL | DIV | MOD | SUB; //fixme
+//arithmetic: ADD | MUL | DIV | MOD | SUB; //fixme
 
 //add_sub: (ADD | SUB) mul_div_mod?;
 
 //mul_div_mod: MUL | DIV | MOD;
 
-relational: EQUAL | NOTEQUAL | GE | LE | GT | LT; //fixme
+//relational: EQUAL | NOTEQUAL | GE | LE | GT | LT; //fixme
 
-bitwise: BITAND | BITOR | CARET; //fixme
+//bitwise: BITAND | BITOR | CARET; //fixme
 
-logical: OR | AND;
+//logical: OR | AND;
 
 COLON: ':';
 EQUAL: '==';

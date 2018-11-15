@@ -132,13 +132,9 @@ assign: ( var | LPAREN var ( COMMA var)* RPAREN) ASSIGN expr;
 unary_op: SUB | BANG | TILDE; //fixme
 
 ASSIGN: '=';
-
 GT: '>';
-
 LT: '<';
-
 BANG: '!';
-
 TILDE: '~';
 
 //expressions detail
@@ -177,8 +173,6 @@ FUNCTION: 'function';
 
 // Literals
 
-
-
 real_test: REAL_CONST; //todo delete test rule
 
 REAL_CONST: (INT_CONST|HEX_CONST) (DOT INT_CONST EXPONENT_PART?)?//todo accept hex after .
@@ -209,21 +203,6 @@ SEMI: ';';
 COMMA: ',';
 DOT: '.';
 
-//operators
-
-//binary_op: arithmetic | relational | bitwise | logical; //fixme
-
-//arithmetic: ADD | MUL | DIV | MOD | SUB; //fixme
-
-//add_sub: (ADD | SUB) mul_div_mod?;
-
-//mul_div_mod: MUL | DIV | MOD;
-
-//relational: EQUAL | NOTEQUAL | GE | LE | GT | LT; //fixme
-
-//bitwise: BITAND | BITOR | CARET; //fixme
-
-//logical: OR | AND;
 
 COLON: ':';
 EQUAL: '==';

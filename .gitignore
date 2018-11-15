@@ -67,4 +67,4 @@ typings/
 .vscode
 
 # test program
-.test.txt
+.test*

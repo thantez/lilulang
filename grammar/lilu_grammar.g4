@@ -89,29 +89,23 @@ parans_id_const:
 	| list
 	| NIL;
 
-mul_div_mod:
-	mul_div_mod (MUL | DIV | MOD) parans_id_const
-	| parans_id_const;
+mul_div_mod: parans_id_const| mul_div_mod (MUL | DIV | MOD) parans_id_const;
 
-add_sub: add_sub (ADD | SUB) mul_div_mod | mul_div_mod;
+add_sub: mul_div_mod | add_sub (ADD | SUB) mul_div_mod;
 
-relational_than: relational_than (LT | GT) add_sub | add_sub;
+relational_than: add_sub | relational_than (LT | GT) add_sub;
 
-relational_equals:
-	relational_equals (EQUAL | NOTEQUAL | LE | GE) relational_than
-	| relational_than;
+relational_equals: relational_than | relational_equals (EQUAL | NOTEQUAL | LE | GE) relational_than;
 
-bitwise_and:
-	bitwise_and BITAND relational_equals
-	| relational_equals;
+bitwise_and: relational_equals | bitwise_and BITAND relational_equals;
 
-bitwise_caret: bitwise_caret CARET bitwise_and | bitwise_and;
+bitwise_caret: bitwise_and | bitwise_caret CARET bitwise_and;
 
-bitwise_or: bitwise_or BITOR bitwise_caret | bitwise_caret;
+bitwise_or: bitwise_caret | bitwise_or BITOR bitwise_caret;
 
-logical_and: logical_and AND bitwise_or | bitwise_or;
+logical_and: bitwise_or | logical_and AND bitwise_or;
 
-expr: expr OR logical_and | logical_and;
+expr: logical_and | expr OR logical_and;
 
 //functions
 
@@ -182,24 +176,23 @@ FUNCTION: 'function';
 
 // Literals
 
-INT_CONST: '0' | [1-9] DIGITS | HEX_CONST;
+fragment DIGIT: [0-9];
 
-HEX_CONST: '0' [xX] [0-9a-fA-F];
+fragment EXPONENT_PART: [eE] [+-]? DIGIT+;
 
-REAL_CONST: (DIGITS DOT DIGITS? | DOT DIGITS) EXPONENT_PART?;
+fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\];
 
 BOOL_CONST: 'true' | 'false';
 
 // TODO: ~["\\\r\n] WHAT DOES IT MEAN?
 STRING_CONST: '\'' (~["\\\r\n] | ESCAPE_SEQUENCE)* '\'';
 
-fragment EXPONENT_PART: [eE] [+-]? DIGITS;
+REAL_CONST: (DIGIT+ DOT (DIGIT+)? | DOT DIGIT+) EXPONENT_PART?;
 
-fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\];
+HEX_CONST: '0' [xX] [0-9a-fA-F];
 
-fragment DIGITS: DIGIT+;
+INT_CONST: DIGIT+ | HEX_CONST;
 
-fragment DIGIT: [0-9];
 
 //separators
 

@@ -187,9 +187,9 @@ fragment DIGIT: [0-9];
 
 BOOL_CONST: 'true' | 'false';
 
-// TODO: ~["\\\r\n] WHAT DOES IT MEAN?
-STRING_CONST: '\'' (~["\\\r\n] | ESCAPE_SEQUENCE)* '\'';
-fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\] | '\\' [xX] [0-9a-fA-F] [0-9a-fA-F];
+str_test: STRING_CONST;//todo remove test
+STRING_CONST: '\'' (~['\\] | ESCAPE_SEQUENCE)* '\'';
+fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\] | '\\' [xX] HEXAK HEXAK;
 
 //separators
 

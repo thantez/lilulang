@@ -5,11 +5,11 @@ program: dcl def;
 //constant values
 
 const_val:
-		INT_CONST
-		| HEX_CONST
-		| REAL_CONST
-		| BOOL_CONST
-		| STRING_CONST;
+	INT_CONST
+	| HEX_CONST
+	| REAL_CONST
+	| BOOL_CONST
+	| STRING_CONST;
 
 //types
 
@@ -42,7 +42,6 @@ ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | var_def)+ RBRACE;
 
 dcl: ft_dcl?;
 
-
 //statement
 
 cond_stmt:
@@ -71,12 +70,11 @@ stmt:
 	| RETURN SEMI
 	| BREAK SEMI
 	| CONTINUE SEMI
-	| DESTRUCT ( LBRACK RBRACK )* ID SEMI;
-
+	| DESTRUCT (LBRACK RBRACK)* ID SEMI;
 
 //block
 
-block: LBRACE ( var_def | stmt )* RBRACE;
+block: LBRACE (var_def | stmt)* RBRACE;
 
 //expressions
 
@@ -93,15 +91,21 @@ parans_id_const:
 
 unary_expr: parans_id_const | unary_op parans_id_const;
 
-mul_div_mod: unary_expr| mul_div_mod (MUL | DIV | MOD) unary_expr;
+mul_div_mod:
+	unary_expr
+	| mul_div_mod (MUL | DIV | MOD) unary_expr;
 
 add_sub: mul_div_mod | add_sub (ADD | SUB) mul_div_mod;
 
 relational_than: add_sub | relational_than (LT | GT) add_sub;
 
-relational_equals: relational_than | relational_equals (EQUAL | NOTEQUAL | LE | GE) relational_than;
+relational_equals:
+	relational_than
+	| relational_equals (EQUAL | NOTEQUAL | LE | GE) relational_than;
 
-bitwise_and: relational_equals | bitwise_and BITAND relational_equals;
+bitwise_and:
+	relational_equals
+	| bitwise_and BITAND relational_equals;
 
 bitwise_caret: bitwise_and | bitwise_caret CARET bitwise_and;
 
@@ -130,17 +134,13 @@ def: ft_def+;
 
 assign: ( var | LPAREN var ( COMMA var)* RPAREN) ASSIGN expr;
 
-//assignment operators
-
-unary_op: SUB | BANG | TILDE; //fixme
+unary_op: SUB | BANG | TILDE;
 
 ASSIGN: '=';
 GT: '>';
 LT: '<';
 BANG: '!';
 TILDE: '~';
-
-//expressions detail
 
 //keywords
 
@@ -176,11 +176,10 @@ FUNCTION: 'function';
 
 // Literals
 
-real_test: REAL_CONST; //todo delete test rule
-
-//REAL_CONST: (?!DOT)(INT_CONST|HEX_CONST)? DOT (INT_CONST EXPONENT_PART?)?//todo simplify regex
-REAL_CONST: (INT_CONST|HEX_CONST) DOT (INT_CONST EXPONENT_PART?)?//todo accept hex after .
-           | DOT INT_CONST EXPONENT_PART?;
+REAL_CONST: (INT_CONST | HEX_CONST) DOT (
+		INT_CONST EXPONENT_PART?
+	)?
+	| DOT INT_CONST EXPONENT_PART?;
 fragment EXPONENT_PART: [eE] [+-]? DIGIT+;
 
 HEX_CONST: '0' [xX] HEXAK;
@@ -191,9 +190,10 @@ fragment DIGIT: [0-9];
 
 BOOL_CONST: 'true' | 'false';
 
-str_test: STRING_CONST;//todo remove test
 STRING_CONST: '\'' (~['\\] | ESCAPE_SEQUENCE)* '\'';
-fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\] | '\\' [xX] HEXAK HEXAK;
+fragment ESCAPE_SEQUENCE:
+	'\\' [tnr0'\\]
+	| '\\' [xX] HEXAK HEXAK;
 
 //separators
 
@@ -206,7 +206,6 @@ RBRACK: ']';
 SEMI: ';';
 COMMA: ',';
 DOT: '.';
-
 
 COLON: ':';
 EQUAL: '==';

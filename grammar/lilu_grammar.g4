@@ -229,12 +229,12 @@ ID: LETTER_ ( LETTER_ | DIGIT)*;
 
 fragment LETTER_: [A-Za-z_#];
 
-//skip
+//skips and channel(HIDDEN)
 
 Whitespace: [ \t]+ -> skip;
 
 Newline: ( '\r' '\n'? | '\n') -> skip;
 
-BlockComment: '%~' .*? '~%' -> skip;
+BlockComment: '%~' .*? '~%' -> channel(HIDDEN);
 
-LineComment: '%%' ~[\r\n]* -> skip;
+LineComment: '%%' ~[\r\n]* -> channel(HIDDEN);

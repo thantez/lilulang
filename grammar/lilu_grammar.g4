@@ -182,19 +182,19 @@ REAL_CONST: (INT_CONST | HEX_CONST) DOT (
 	| DOT INT_CONST EXPONENT_PART?;
 fragment EXPONENT_PART: [eE] [+-]? DIGIT+;
 
-HEX_CONST: '0' [xX] HEXAK;
-fragment HEXAK: [0-9a-fA-F]+;
+HEX_CONST: '0' [xX] HEX_DIGIT+;
+HEX_STR: '\\' [xX] HEX_DIGIT HEX_DIGIT;
+fragment HEX_DIGIT: [0-9a-fA-F];
 
 INT_CONST: DIGIT+;
 fragment DIGIT: [0-9];
 
 BOOL_CONST: 'true' | 'false';
 
-STRING_CONST: '\'' (~['\\] | ESCAPE_SEQUENCE)* '\'';
+STRING_CONST: '\'' (~['\\] | HEX_STR | ESCAPE_SEQUENCE)* '\'';
 fragment ESCAPE_SEQUENCE:
 	'\\' [tnr0'\\]
-	| '\\' [xX] HEXAK HEXAK;
-
+	;
 //separators
 
 LPAREN: '(';
@@ -206,7 +206,6 @@ RBRACK: ']';
 SEMI: ';';
 COMMA: ',';
 DOT: '.';
-
 COLON: ':';
 EQUAL: '==';
 LE: '<=';
@@ -229,7 +228,7 @@ ID: LETTER_ ( LETTER_ | DIGIT)*;
 
 fragment LETTER_: [A-Za-z_#];
 
-//skips and channel(HIDDEN)
+//skips and channels
 
 Whitespace: [ \t]+ -> skip;
 

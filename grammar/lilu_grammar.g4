@@ -46,7 +46,7 @@ dcl: ft_dcl?;
 
 cond_stmt:
 	IF expr block (ELSE block)?
-	| SWITCH var LBRACE (CASE INT_CONST COLON block)* DEFAULT COLON block RBRACE;
+	| SWITCH var LBRACE (CASE (INT_CONST|HEX_CONST) COLON block)* DEFAULT COLON block RBRACE;
 
 loop_stmt:
 	FOR (type? assign)? SEMI expr SEMI assign? block
@@ -76,44 +76,59 @@ stmt:
 
 block: LBRACE (var_def | stmt)* RBRACE;
 
+
 //expressions
 
-// TODO: Modify the orders
-parans_id_const:
-	LPAREN expr RPAREN
-	| ID
-	| const_val
-	| ALLOCATE handle_call
-	| func_call
-	| var
-	| list
-	| NIL;
+// parans_id_const:
+// 	LPAREN expr RPAREN
+// 	| unary_op parans_id_const
+// 	| ID
+// 	| const_val
+// 	| ALLOCATE handle_call
+// 	| func_call
+// 	| var
+// 	| list
+// 	| NIL;
 
-unary_expr: parans_id_const | unary_op parans_id_const;
+// mul_div_mod:
+// 	parans_id_const ((MUL | DIV | MOD) parans_id_const)*;
 
-mul_div_mod:
-	unary_expr
-	| mul_div_mod (MUL | DIV | MOD) unary_expr;
+// add_sub: mul_div_mod ((ADD | SUB) mul_div_mod)*;
 
-add_sub: mul_div_mod | add_sub (ADD | SUB) mul_div_mod;
+// relational_than: add_sub ((LT | GT) add_sub)*;
 
-relational_than: add_sub | relational_than (LT | GT) add_sub;
+// relational_equals: relational_than ((EQUAL | NOTEQUAL | LE | GE) relational_than)*;
 
-relational_equals:
-	relational_than
-	| relational_equals (EQUAL | NOTEQUAL | LE | GE) relational_than;
+// bitwise_and: relational_equals (BITAND relational_equals)*;
 
-bitwise_and:
-	relational_equals
-	| bitwise_and BITAND relational_equals;
+// bitwise_caret: bitwise_and (CARET bitwise_and)*;
 
-bitwise_caret: bitwise_and | bitwise_caret CARET bitwise_and;
+// bitwise_or: bitwise_caret (BITOR bitwise_caret)*;
 
-bitwise_or: bitwise_caret | bitwise_or BITOR bitwise_caret;
+// logical_and: bitwise_or (AND bitwise_or)*;
 
-logical_and: bitwise_or | logical_and AND bitwise_or;
+// expr: logical_and (OR logical_and)*;
 
-expr: logical_and | expr OR logical_and;
+// ANTLR auto ambiguty fix!!
+expr: 
+ unary_op expr 
+| expr (MUL | DIV | MOD) expr 
+| expr (ADD | SUB) expr 
+| expr (LT | GT) expr 
+| expr (EQUAL | NOTEQUAL | LE | GE) expr 
+| expr BITAND expr 
+| expr CARET expr 
+| expr BITOR expr 
+| expr AND expr 
+| expr OR expr 
+| (LPAREN expr RPAREN | ID 
+| const_val 
+| ALLOCATE handle_call 
+| func_call 
+| var 
+| list 
+| NIL) ;
+
 
 //functions
 

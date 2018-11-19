@@ -245,10 +245,10 @@ fragment LETTER_: [A-Za-z_#];
 
 //skips and channels
 
-Whitespace: [ \t]+ -> skip;
+WHITESPACE: [ \t]+ -> skip;
 
-Newline: ( '\r' '\n'? | '\n') -> skip;
+NEWLINE: ( '\r' '\n'? | '\n') -> skip;
 
-BlockComment: '%~' .*? '~%' -> channel(HIDDEN);
+BLOCKCOMMENT: '%~' .*? '~%' -> channel(HIDDEN);
 
-LineComment: '%%' ~[\r\n]* -> channel(HIDDEN);
+LINECOMMENT: '%%' ~[\r\n]* -> channel(HIDDEN);

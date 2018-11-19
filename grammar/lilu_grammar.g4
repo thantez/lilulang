@@ -2,6 +2,7 @@ grammar lilu_grammar;
 
 program: dcl def;
 
+
 //constant values
 
 const_val:
@@ -11,9 +12,11 @@ const_val:
 	| BOOL_CONST
 	| STRING_CONST;
 
+
 //types
 
 type: INT | BOOL | FLOAT | STRING | ID;
+
 
 // var def
 
@@ -24,6 +27,7 @@ var: ( ( THIS | SUPER) DOT)? ref ( DOT ref)*;
 var_val: ref ( ASSIGN expr)?;
 
 var_def: CONST? type var_val ( COMMA var_val)* SEMI;
+
 
 //declare
 
@@ -41,6 +45,7 @@ type_dcl: ID SEMI;
 ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | var_def)+ RBRACE;
 
 dcl: ft_dcl?;
+
 
 //statement
 
@@ -71,6 +76,7 @@ stmt:
 	| BREAK SEMI
 	| CONTINUE SEMI
 	| DESTRUCT (LBRACK RBRACK)* ID SEMI;
+
 
 //block
 
@@ -130,6 +136,7 @@ ft_def: type_def | fun_def;
 
 def: ft_def+;
 
+
 //assignment
 
 assign: ( var | LPAREN var ( COMMA var)* RPAREN) ASSIGN expr;
@@ -141,6 +148,7 @@ GT: '>';
 LT: '<';
 BANG: '!';
 TILDE: '~';
+
 
 //keywords
 
@@ -174,6 +182,7 @@ WHILE: 'while';
 WRITE: 'write';
 FUNCTION: 'function';
 
+
 // Literals
 
 REAL_CONST: (INT_CONST | HEX_CONST) DOT (
@@ -190,10 +199,16 @@ fragment DIGIT: [0-9];
 
 BOOL_CONST: 'true' | 'false';
 
+<<<<<<< Updated upstream
 STRING_CONST: '\'' (~['\\] | ESCAPE_SEQUENCE)* '\'';
 fragment ESCAPE_SEQUENCE:
 	'\\' [tnr0'\\]
 	| '\\' [xX] HEXAK HEXAK;
+=======
+STRING_CONST: '\'' (~['\\] | HEX_STR | ESCAPE_SEQUENCE)* '\'';
+fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\] ;
+
+>>>>>>> Stashed changes
 
 //separators
 
@@ -223,18 +238,24 @@ BITOR: '|';
 CARET: '^';
 MOD: '%';
 
+
 //ID
 
 ID: LETTER_ ( LETTER_ | DIGIT)*;
 
 fragment LETTER_: [A-Za-z_#];
 
+<<<<<<< Updated upstream
 //skips and channel(HIDDEN)
+=======
 
-Whitespace: [ \t]+ -> skip;
+//skips and channels
+>>>>>>> Stashed changes
 
-Newline: ( '\r' '\n'? | '\n') -> skip;
+WHITESPACE: [ \t]+ -> skip;
 
-BlockComment: '%~' .*? '~%' -> channel(HIDDEN);
+NEWLINE: ( '\r' '\n'? | '\n') -> skip;
 
-LineComment: '%%' ~[\r\n]* -> channel(HIDDEN);
+BLOCKCOMMENT: '%~' .*? '~%' -> channel(HIDDEN);
+
+LINECOMMENT: '%%' ~[\r\n]* -> channel(HIDDEN);

@@ -4,7 +4,12 @@ program: dcl def;
 
 //constant values
 
-const_val: (unary_op)? (INT_CONST | REAL_CONST | BOOL_CONST | STRING_CONST);
+const_val:
+	INT_CONST
+	| HEX_CONST
+	| REAL_CONST
+	| BOOL_CONST
+	| STRING_CONST;
 
 //types
 
@@ -37,15 +42,11 @@ ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | var_def)+ RBRACE;
 
 dcl: ft_dcl?;
 
-//names
-
-block: LBRACE ( var_def | stmt)* RBRACE;
-
 //statement
 
 cond_stmt:
 	IF expr block (ELSE block)?
-	| SWITCH var LBRACE (CASE INT_CONST COLON block)* DEFAULT COLON block RBRACE;
+	| SWITCH var LBRACE (CASE (INT_CONST|HEX_CONST) COLON block)* DEFAULT COLON block RBRACE;
 
 loop_stmt:
 	FOR (type? assign)? SEMI expr SEMI assign? block
@@ -69,23 +70,66 @@ stmt:
 	| RETURN SEMI
 	| BREAK SEMI
 	| CONTINUE SEMI
-	| DESTRUCT ( LBRACK RBRACK)* ID SEMI;
+	| DESTRUCT (LBRACK RBRACK)* ID SEMI;
+
+//block
+
+block: LBRACE (var_def | stmt)* RBRACE;
+
 
 //expressions
-expr:
-	expr (ADD | SUB) mul_div_mod
-	| mul_div_mod
-	| ALLOCATE handle_call
-	| func_call
-	| var
-	| list
-	| NIL;
 
-mul_div_mod:
-	mul_div_mod (MUL | DIV | MOD) parans_id_const
-	| parans_id_const;
+// parans_id_const:
+// 	LPAREN expr RPAREN
+// 	| unary_op parans_id_const
+// 	| ID
+// 	| const_val
+// 	| ALLOCATE handle_call
+// 	| func_call
+// 	| var
+// 	| list
+// 	| NIL;
 
-parans_id_const: LPAREN expr RPAREN | ID | const_val;
+// mul_div_mod:
+// 	parans_id_const ((MUL | DIV | MOD) parans_id_const)*;
+
+// add_sub: mul_div_mod ((ADD | SUB) mul_div_mod)*;
+
+// relational_than: add_sub ((LT | GT) add_sub)*;
+
+// relational_equals: relational_than ((EQUAL | NOTEQUAL | LE | GE) relational_than)*;
+
+// bitwise_and: relational_equals (BITAND relational_equals)*;
+
+// bitwise_caret: bitwise_and (CARET bitwise_and)*;
+
+// bitwise_or: bitwise_caret (BITOR bitwise_caret)*;
+
+// logical_and: bitwise_or (AND bitwise_or)*;
+
+// expr: logical_and (OR logical_and)*;
+
+// ANTLR auto ambiguty fix!!
+expr: 
+ unary_op expr 
+| expr (MUL | DIV | MOD) expr 
+| expr (ADD | SUB) expr 
+| expr (LT | GT) expr 
+| expr (EQUAL | NOTEQUAL | LE | GE) expr 
+| expr BITAND expr 
+| expr CARET expr 
+| expr BITOR expr 
+| expr AND expr 
+| expr OR expr 
+| (LPAREN expr RPAREN | ID 
+| const_val 
+| ALLOCATE handle_call 
+| func_call 
+| var 
+| list 
+| NIL) ;
+
+
 //functions
 
 fun_def:
@@ -105,21 +149,13 @@ def: ft_def+;
 
 assign: ( var | LPAREN var ( COMMA var)* RPAREN) ASSIGN expr;
 
-//assignment operators
-
-unary_op: SUB | BANG | TILDE; //fixme
+unary_op: SUB | BANG | TILDE;
 
 ASSIGN: '=';
-
 GT: '>';
-
 LT: '<';
-
 BANG: '!';
-
 TILDE: '~';
-
-//expressions detail
 
 //keywords
 
@@ -152,20 +188,28 @@ TYPE: 'type';
 WHILE: 'while';
 WRITE: 'write';
 FUNCTION: 'function';
-// FALSE: 'false'; TRUE: 'true';
 
-// literals
+// Literals
 
-REAL_CONST: INT_CONST DOT INT_CONST;
+REAL_CONST: (INT_CONST | HEX_CONST) DOT (
+		INT_CONST EXPONENT_PART?
+	)?
+	| DOT INT_CONST EXPONENT_PART?;
+fragment EXPONENT_PART: [eE] [+-]? DIGIT+;
 
-STRING_CONST: '"' .*? '"';
+HEX_CONST: '0' [xX] HEX_DIGIT+;
+HEX_STR: '\\' [xX] HEX_DIGIT HEX_DIGIT;
+fragment HEX_DIGIT: [0-9a-fA-F];
+
+INT_CONST: DIGIT+;
+fragment DIGIT: [0-9];
 
 BOOL_CONST: 'true' | 'false';
 
-fragment DIGIT: [0-9];
-
-INT_CONST: ('0x')? DIGIT+;
-
+STRING_CONST: '\'' (~['\\] | HEX_STR | ESCAPE_SEQUENCE)* '\'';
+fragment ESCAPE_SEQUENCE:
+	'\\' [tnr0'\\]
+	;
 //separators
 
 LPAREN: '(';
@@ -177,23 +221,6 @@ RBRACK: ']';
 SEMI: ';';
 COMMA: ',';
 DOT: '.';
-
-//operators
-
-binary_op: arithmetic | relational | bitwise | logical; //fixme
-
-arithmetic: ADD | MUL | DIV | MOD | SUB; //fixme
-
-//add_sub: (ADD | SUB) mul_div_mod?;
-
-//mul_div_mod: MUL | DIV | MOD;
-
-relational: EQUAL | NOTEQUAL | GE | LE | GT | LT; //fixme
-
-bitwise: BITAND | BITOR | CARET; //fixme
-
-logical: OR | AND;
-
 COLON: ':';
 EQUAL: '==';
 LE: '<=';
@@ -214,14 +241,14 @@ MOD: '%';
 
 ID: LETTER_ ( LETTER_ | DIGIT)*;
 
-fragment LETTER_: [A-Za-z_];
+fragment LETTER_: [A-Za-z_#];
 
-//skip
+//skips and channels
 
 Whitespace: [ \t]+ -> skip;
 
 Newline: ( '\r' '\n'? | '\n') -> skip;
 
-BlockComment: '%~' .*? '~%' -> skip;
+BlockComment: '%~' .*? '~%' -> channel(HIDDEN);
 
-LineComment: '%%' ~[\r\n]* -> skip;
+LineComment: '%%' ~[\r\n]* -> channel(HIDDEN);

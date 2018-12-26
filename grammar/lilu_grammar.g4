@@ -15,30 +15,30 @@ const_val:
 
 type: INT | BOOL | FLOAT | STRING | ID;
 
-// var def
+// variable def
 
 ref: ID ( LBRACK expr RBRACK)*;
 
-var: ( ( THIS | SUPER) DOT)? ref ( DOT ref)*;
+variable: ( ( THIS | SUPER) DOT)? ref ( DOT ref)*;
 
-var_val: ref ( ASSIGN expr)?;
+variable_val: ref ( ASSIGN expr)?;
 
-var_def: CONST? type var_val ( COMMA var_val)* SEMI;
+variable_def: CONST? type variable_val ( COMMA variable_val)* SEMI;
 
 //declare
 
 args: type ( LBRACK RBRACK)* | args COMMA type ( LBRACK RBRACK)*;
 
-args_var:
+args_variable:
 	type (LBRACK RBRACK)* ID
-	| args_var COMMA type ( LBRACK RBRACK)* ID;
+	| args_variable COMMA type ( LBRACK RBRACK)* ID;
 
 func_dcl:
-	(LPAREN args RPAREN ASSIGN)? ID LPAREN (args | args_var)? RPAREN SEMI;
+	(LPAREN args RPAREN ASSIGN)? ID LPAREN (args | args_variable)? RPAREN SEMI;
 
 type_dcl: ID SEMI;
 
-ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | var_def)+ RBRACE;
+ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | variable_def)+ RBRACE;
 
 dcl: ft_dcl?;
 
@@ -46,7 +46,7 @@ dcl: ft_dcl?;
 
 cond_stmt:
 	IF expr block (ELSE block)?
-	| SWITCH var LBRACE (CASE (INT_CONST|HEX_CONST) COLON block)* DEFAULT COLON block RBRACE;
+	| SWITCH variable LBRACE (CASE (INT_CONST|HEX_CONST) COLON block)* DEFAULT COLON block RBRACE;
 
 loop_stmt:
 	FOR (type? assign)? SEMI expr SEMI assign? block
@@ -58,9 +58,9 @@ params: expr | expr COMMA params;
 
 handle_call: ID LPAREN params? RPAREN;
 
-func_call: (var DOT)? handle_call
-	| READ LPAREN var RPAREN
-	| WRITE LPAREN var RPAREN;
+func_call: (variable DOT)? handle_call
+	| READ LPAREN variable RPAREN
+	| WRITE LPAREN variable RPAREN;
 
 stmt:
 	assign SEMI
@@ -74,7 +74,7 @@ stmt:
 
 //block
 
-block: LBRACE (var_def | stmt)* RBRACE;
+block: LBRACE (variable_def | stmt)* RBRACE;
 
 
 //expressions
@@ -86,7 +86,7 @@ block: LBRACE (var_def | stmt)* RBRACE;
 // 	| const_val
 // 	| ALLOCATE handle_call
 // 	| func_call
-// 	| var
+// 	| variable
 // 	| list
 // 	| NIL;
 
@@ -125,7 +125,7 @@ expr:
 | const_val 
 | ALLOCATE handle_call 
 | func_call 
-| var 
+| variable 
 | list 
 | NIL) ;
 
@@ -133,11 +133,11 @@ expr:
 //functions
 
 fun_def:
-	(LPAREN args_var RPAREN ASSIGN)? FUNCTION ID LPAREN args_var? RPAREN block;
+	(LPAREN args_variable RPAREN ASSIGN)? FUNCTION ID LPAREN args_variable? RPAREN block;
 
 access_modifier: PRIVATE | PUBLIC | PROTECTED;
 
-component: access_modifier? ( var_def | fun_def);
+component: access_modifier? ( variable_def | fun_def);
 
 type_def: TYPE ID ( COLON ID)? LBRACE component+ RBRACE;
 
@@ -147,7 +147,7 @@ def: ft_def+;
 
 //assignment
 
-assign: ( var | LPAREN var ( COMMA var)* RPAREN) ASSIGN expr;
+assign: ( variable | LPAREN variable ( COMMA variable)* RPAREN) ASSIGN expr;
 
 unary_op: SUB | BANG | TILDE;
 

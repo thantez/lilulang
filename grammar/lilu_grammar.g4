@@ -2,6 +2,7 @@ grammar lilu_grammar;
 
 program: dcl def;
 
+
 //constant values
 
 const_val:
@@ -11,11 +12,15 @@ const_val:
 	| BOOL_CONST
 	| STRING_CONST;
 
+
 //types
 
 type: INT | BOOL | FLOAT | STRING | ID;
 
+
 // variable def
+// var def
+
 
 ref: ID ( LBRACK expr RBRACK)*;
 
@@ -24,6 +29,7 @@ variable: ( ( THIS | SUPER) DOT)? ref ( DOT ref)*;
 variable_val: ref ( ASSIGN expr)?;
 
 variable_def: CONST? type variable_val ( COMMA variable_val)* SEMI;
+
 
 //declare
 
@@ -41,6 +47,7 @@ type_dcl: ID SEMI;
 ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | variable_def)+ RBRACE;
 
 dcl: ft_dcl?;
+
 
 //statement
 
@@ -71,6 +78,7 @@ stmt:
 	| BREAK SEMI
 	| CONTINUE SEMI
 	| DESTRUCT (LBRACK RBRACK)* ID SEMI;
+
 
 //block
 
@@ -145,6 +153,7 @@ ft_def: type_def | fun_def;
 
 def: ft_def+;
 
+
 //assignment
 
 assign: ( variable | LPAREN variable ( COMMA variable)* RPAREN) ASSIGN expr;
@@ -156,6 +165,7 @@ GT: '>';
 LT: '<';
 BANG: '!';
 TILDE: '~';
+
 
 //keywords
 
@@ -189,6 +199,7 @@ WHILE: 'while';
 WRITE: 'write';
 FUNCTION: 'function';
 
+
 // Literals
 
 REAL_CONST: (INT_CONST | HEX_CONST) DOT (
@@ -210,6 +221,8 @@ STRING_CONST: '\'' (~['\\] | HEX_STR | ESCAPE_SEQUENCE)* '\'';
 fragment ESCAPE_SEQUENCE:
 	'\\' [tnr0'\\]
 	;
+
+
 //separators
 
 LPAREN: '(';
@@ -237,11 +250,13 @@ BITOR: '|';
 CARET: '^';
 MOD: '%';
 
+
 //ID
 
 ID: LETTER_ ( LETTER_ | DIGIT)*;
 
 fragment LETTER_: [A-Za-z_#];
+
 
 //skips and channels
 

@@ -19,7 +19,7 @@ type: INT | BOOL | FLOAT | STRING | ID;
 
 
 // variable def
-// var def
+
 
 
 ref: ID ( LBRACK expr RBRACK)*;
@@ -87,37 +87,6 @@ block: LBRACE (variable_def | stmt)* RBRACE;
 
 //expressions
 
-// parans_id_const:
-// 	LPAREN expr RPAREN
-// 	| unary_op parans_id_const
-// 	| ID
-// 	| const_val
-// 	| ALLOCATE handle_call
-// 	| func_call
-// 	| variable
-// 	| list
-// 	| NIL;
-
-// mul_div_mod:
-// 	parans_id_const ((MUL | DIV | MOD) parans_id_const)*;
-
-// add_sub: mul_div_mod ((ADD | SUB) mul_div_mod)*;
-
-// relational_than: add_sub ((LT | GT) add_sub)*;
-
-// relational_equals: relational_than ((EQUAL | NOTEQUAL | LE | GE) relational_than)*;
-
-// bitwise_and: relational_equals (BITAND relational_equals)*;
-
-// bitwise_caret: bitwise_and (CARET bitwise_and)*;
-
-// bitwise_or: bitwise_caret (BITOR bitwise_caret)*;
-
-// logical_and: bitwise_or (AND bitwise_or)*;
-
-// expr: logical_and (OR logical_and)*;
-
-// ANTLR auto ambiguty fix!!
 expr: 
  unary_op expr 
 | expr (MUL | DIV | MOD) expr 

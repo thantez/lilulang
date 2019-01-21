@@ -69,8 +69,8 @@ typings/
 # test program
 .test*
 
-# output files
-output
+#temps local files
+temp/.temp*
 
 # is not own file :))
 ASTBuilder.js

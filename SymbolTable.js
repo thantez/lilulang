@@ -1,7 +1,7 @@
 class SymbolTable {
-  constructor(id, type, parentScope) {
+  constructor(id, typeObj, parentScope) {
     this.id = id;
-    this.type = type;
+    this.typeObj = typeObj;
     this.parentScope = parentScope;
     this.offset = 0;
     this.size = 0;
@@ -34,23 +34,34 @@ class Symbol {
   * @constructor
   */
 
-  constructor(id, type, width, offset, childScopeSymbolTable) {
+  constructor(id, typeObj, offset, childScopeSymbolTable) {
     /**
     * constructor for Symbol class
     *
     * @method constructor
     * @param {String} id content of id lex of symbol
     * @param {String} type int or float or string or bool or user types
-    * @param {Integer} width int = 4 (=1B), float = 8 (=2B), string = 2*charsCount+2, other = 4
+    * @param {Integer} width float = 8 (=2B), string = 2*charsCount+2, other = 4
     * @param {Integer} offset default offset = 0, offset = offset + width
     * @param {SymbolTable} childScopeSymbolTable child scope symbol table
     */
 
     this.id = id;
-    this.type = type;
-    this.width = width;
+    this.typeObj = typeObj;
     this.offset = offset;
     this.childScope = childScopeSymbolTable;
+
+    switch(typeObj.type){
+      case 'float':
+        this.width = 8;
+        break;
+      case 'string':
+        this.width = (typeObj.value.length + 1)*2;
+        break;
+      default:
+        this.width = 4;
+        break;
+    }
   }
 
   addChildScope(childScopeSymbolTable) {

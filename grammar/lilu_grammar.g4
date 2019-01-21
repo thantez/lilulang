@@ -2,25 +2,20 @@ grammar lilu_grammar;
 
 program: dcl def;
 
-
 //constant values
 
 const_val:
-	INT_CONST
-	| HEX_CONST
-	| REAL_CONST
-	| BOOL_CONST
-	| STRING_CONST;
-
+	INT_CONST		# const_valINT
+	| HEX_CONST		# const_valHEX
+	| REAL_CONST	# const_valREAL
+	| BOOL_CONST	# const_valBOOL
+	| STRING_CONST	# const_valSTRING;
 
 //types
 
 type: INT | BOOL | FLOAT | STRING | ID;
 
-
-// variable def
-
-
+// variable def var def
 
 ref: ID ( LBRACK expr RBRACK)*;
 
@@ -28,84 +23,86 @@ variable: ( ( THIS | SUPER) DOT)? ref ( DOT ref)*;
 
 variable_val: ref ( ASSIGN expr)?;
 
-variable_def: CONST? type variable_val ( COMMA variable_val)* SEMI;
-
+variable_def:
+	CONST? type variable_val (COMMA variable_val)* SEMI;
 
 //declare
 
-args: type ( LBRACK RBRACK)* | args COMMA type ( LBRACK RBRACK)*;
+args:
+	type (LBRACK RBRACK)*						# argsType
+	| args COMMA type ( LBRACK RBRACK)*		# argsArgs;
 
 args_variable:
-	type (LBRACK RBRACK)* ID
-	| args_variable COMMA type ( LBRACK RBRACK)* ID;
+	type (LBRACK RBRACK)* ID								# args_variableType
+	| args_variable COMMA type (LBRACK RBRACK)* ID	# args_variableArgs_variable;
 
 func_dcl:
 	(LPAREN args RPAREN ASSIGN)? ID LPAREN (args | args_variable)? RPAREN SEMI;
 
 type_dcl: ID SEMI;
 
-ft_dcl: DECLARE LBRACE ( func_dcl | type_dcl | variable_def)+ RBRACE;
+ft_dcl:
+	DECLARE LBRACE (func_dcl | type_dcl | variable_def)+ RBRACE;
 
 dcl: ft_dcl?;
-
 
 //statement
 
 cond_stmt:
-	IF expr block (ELSE block)?
-	| SWITCH variable LBRACE (CASE (INT_CONST|HEX_CONST) COLON block)* DEFAULT COLON block RBRACE;
+	IF expr block (ELSE block)? # cond_stmtIF
+	| SWITCH variable LBRACE (
+		CASE (INT_CONST | HEX_CONST) COLON block
+	)* DEFAULT COLON block RBRACE # cond_stmtSWITCH;
 
 loop_stmt:
-	FOR (type? assign)? SEMI expr SEMI assign? block
-	| WHILE expr block;
+	FOR (type? assign)? SEMI expr SEMI assign? block	# loop_stmtFOR
+	| WHILE expr block											# loop_stmtWHILE;
 
 list: LBRACK ( expr | list) ( COMMA ( expr | list))* RBRACK;
 
-params: expr | expr COMMA params;
+params: expr # paramsExpr | expr COMMA params 	# paramsExprCOMMA;
 
 handle_call: ID LPAREN params? RPAREN;
 
-func_call: (variable DOT)? handle_call
-	| READ LPAREN variable RPAREN
-	| WRITE LPAREN variable RPAREN;
+func_call: (variable DOT)? handle_call	# func_callVariable
+	| READ LPAREN variable RPAREN			# func_callREAD
+	| WRITE LPAREN variable RPAREN		# func_callWRITE;
 
 stmt:
-	assign SEMI
-	| func_call SEMI
-	| cond_stmt
-	| loop_stmt
-	| RETURN SEMI
-	| BREAK SEMI
-	| CONTINUE SEMI
-	| DESTRUCT (LBRACK RBRACK)* ID SEMI;
-
+	assign SEMI										# stmtAssign
+	| func_call SEMI								# stmtFunc_call
+	| cond_stmt										# stmtCond_stmt
+	| loop_stmt										# stmtLoop_stmt
+	| RETURN SEMI									# stmtRETURN
+	| BREAK SEMI									# stmtBREAK
+	| CONTINUE SEMI								# stmtCONTINUE
+	| DESTRUCT (LBRACK RBRACK)* ID SEMI		# stmtDESTRUCT;
 
 //block
 
 block: LBRACE (variable_def | stmt)* RBRACE;
 
-
-//expressions
-
-expr: 
- unary_op expr 
-| expr (MUL | DIV | MOD) expr 
-| expr (ADD | SUB) expr 
-| expr (LT | GT) expr 
-| expr (EQUAL | NOTEQUAL | LE | GE) expr 
-| expr BITAND expr 
-| expr CARET expr 
-| expr BITOR expr 
-| expr AND expr 
-| expr OR expr 
-| (LPAREN expr RPAREN | ID 
-| const_val 
-| ALLOCATE handle_call 
-| func_call 
-| variable 
-| list 
-| NIL) ;
-
+expr:
+	unary_op expr										# exprUnary_op
+	| expr (MUL | DIV | MOD) expr					# exprExprMulDivMod
+	| expr (ADD | SUB) expr							# exprExprAddSub
+	| expr (LT | GT) expr							# exprExprLtGt
+	| expr (EQUAL | NOTEQUAL | LE | GE) expr	# exprExprEqualNotequalLeGe
+	| expr BITAND expr								# exprExprBitand
+	| expr CARET expr									# exprExprCaret
+	| expr BITOR expr									# exprExprBitor
+	| expr AND expr									# exprExprAnd
+	| expr OR expr										# exprExprOr
+	| (
+		LPAREN expr RPAREN
+		| ID
+		| const_val
+		| ALLOCATE handle_call
+		| func_call
+		| variable
+		| list
+		| NIL
+	) # exprParen;
 
 //functions
 
@@ -118,14 +115,13 @@ component: access_modifier? ( variable_def | fun_def);
 
 type_def: TYPE ID ( COLON ID)? LBRACE component+ RBRACE;
 
-ft_def: type_def | fun_def;
+ft_def: type_def # ft_defType | fun_def # ft_defFun;
 
 def: ft_def+;
 
-
 //assignment
 
-assign: ( variable | LPAREN variable ( COMMA variable)* RPAREN) ASSIGN expr;
+assign: (variable | LPAREN variable ( COMMA variable)* RPAREN) ASSIGN expr;
 
 unary_op: SUB | BANG | TILDE;
 
@@ -134,7 +130,6 @@ GT: '>';
 LT: '<';
 BANG: '!';
 TILDE: '~';
-
 
 //keywords
 
@@ -168,7 +163,6 @@ WHILE: 'while';
 WRITE: 'write';
 FUNCTION: 'function';
 
-
 // Literals
 
 REAL_CONST: (INT_CONST | HEX_CONST) DOT (
@@ -187,13 +181,8 @@ fragment DIGIT: [0-9];
 BOOL_CONST: 'true' | 'false';
 
 STRING_CONST: '\'' (~['\\] | HEX_STR | ESCAPE_SEQUENCE)* '\'';
-fragment ESCAPE_SEQUENCE:
-	'\\' [tnr0'\\]
-	;
-
-
+fragment ESCAPE_SEQUENCE: '\\' [tnr0'\\];
 //separators
-
 LPAREN: '(';
 RPAREN: ')';
 LBRACE: '{';
@@ -218,21 +207,11 @@ BITAND: '&';
 BITOR: '|';
 CARET: '^';
 MOD: '%';
-
-
 //ID
-
 ID: LETTER_ ( LETTER_ | DIGIT)*;
-
 fragment LETTER_: [A-Za-z_#];
-
-
 //skips and channels
-
 WHITESPACE: [ \t]+ -> skip;
-
 NEWLINE: ( '\r' '\n'? | '\n') -> skip;
-
 BLOCKCOMMENT: '%~' .*? '~%' -> channel(HIDDEN);
-
 LINECOMMENT: '%%' ~[\r\n]* -> channel(HIDDEN);

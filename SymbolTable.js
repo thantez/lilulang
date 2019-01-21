@@ -10,6 +10,7 @@ class SymbolTable {
 
   addSymbol(symbol) {
     this.symbols.push(symbol);
+    this.size = this.size + symbol.getWidth();
   }
 
   addParentScope(parentScope) {
@@ -18,6 +19,10 @@ class SymbolTable {
 
   changeSize(size) {
     this.size = size;
+  }
+
+  getNewOffset(width){
+    return this.size;
   }
 }
 
@@ -50,6 +55,10 @@ class Symbol {
 
   addChildScope(childScopeSymbolTable) {
     this.childScope = childScopeSymbolTable;
+  }
+
+  getWidth(){
+    return this.width;
   }
 }
 

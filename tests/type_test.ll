@@ -1,0 +1,5 @@
+declare {
+    myType;
+}
+
+function test() {}

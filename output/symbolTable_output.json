@@ -3,6 +3,13 @@
   "type": "root",
   "parentScope": null,
   "offset": 0,
-  "size": 0,
-  "symbols": []
+  "size": 4,
+  "symbols": [
+    {
+      "id": "myType",
+      "type": "userType",
+      "width": 4,
+      "offset": 0
+    }
+  ]
 }

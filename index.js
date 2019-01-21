@@ -3,7 +3,7 @@ const liluLexer = require('./lib/lilu_grammarLexer')
 const liluParser = require('./lib/lilu_grammarParser')
 const Listener = require('./Listener')
 const fs = require('fs')
-const input = fs.readFileSync('tests/array_test.ll',{encoding: 'utf8'})
+const input = fs.readFileSync('tests/type_test.ll',{encoding: 'utf8'})
 
 const chars = new antlr4.InputStream(input)
 const lexer = new liluLexer.lilu_grammarLexer(chars)

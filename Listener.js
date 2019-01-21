@@ -55,7 +55,7 @@ class Listener extends listener {
   }
   exitProgram(ctx) {
     //TODO: rootTable size
-    fs.writeFileSync('temp/symbolTable_output.json', JSON.stringify(this.rootTable, null, 2), 'utf-8');
+    fs.writeFileSync('.temp/symbolTable_output.json', JSON.stringify(this.rootTable, null, 2), 'utf-8');
     this.state = 'Program';
   }
 

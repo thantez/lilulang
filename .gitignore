@@ -70,7 +70,10 @@ typings/
 .test*
 
 #temps local files
-temp/.temp*
+.temp
 
 # is not own file :))
 ASTBuilder.js
+
+#local config
+.config.json

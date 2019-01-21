@@ -68,3 +68,9 @@ typings/
 
 # test program
 .test*
+
+# output files
+output
+
+# is not own file :))
+ASTBuilder.js

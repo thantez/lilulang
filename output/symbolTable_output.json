@@ -2,6 +2,7 @@
   "id": "program",
   "type": "root",
   "parentScope": null,
+  "offset": 0,
   "size": 0,
   "symbols": []
 }

@@ -26,6 +26,7 @@ class Listener extends listener {
     this.state = '';
   }
 
+  
   enterProgram(ctx) {
     //define global table
     this.globalTable = new SymbolTable('program', 'root', null);
@@ -40,6 +41,8 @@ class Listener extends listener {
   }
 
   // #region program
+
+  // #region declare
 
   // skip dcl grammar
   enterFt_dcl(ctx) {
@@ -375,6 +378,30 @@ class Listener extends listener {
     }
   }
 
+  //#endregion declare
+  
+  // #region def
+
+  enterDcl(ctx){
+    this.state='dcl';
+  }
+  exitDef(ctx){/* skip */}
+
+  enterType_def(ctx){
+    let typeName = toText(ctx.getChild(1));
+    let typeScope = this.globalTable.getTypeInRoot(typeName);
+    let fatherScope = null;
+    if(ctx.COLON()){
+      let fatherName = toText(ctx.getChild(3));
+      fatherScope = this.globalTable.getTypeInRoot(fatherName);
+    }
+    let typeSymbols = typeScope.symbols;
+    let fatherSymbols = fatherScope.symbols;
+    //TODO: inheritance
+
+  }
+
+  // #endregion def
 
   // #endregion
 }

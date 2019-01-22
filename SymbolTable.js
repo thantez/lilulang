@@ -29,6 +29,36 @@ class SymbolTable {
   getNewOffset(width){
     return this.size;
   }
+
+  getTypeInRoot(id){
+    if(this.id === 'program'){
+      for (let symbol of this.symbols) {
+        if(symbol.typeObj.type === 'userType' && symbol.id === id){
+          return symbol.getChildScope();
+        }
+      }
+    } else {
+      throw ReferenceError('types are in root table');
+    }
+  }
+
+  getChildTable(id){
+    for (let symbol of this.symbols) {
+      let subScopeTable = symbol.getChildScope()
+      if(subScopeTable){
+        if(subScopeTable.id === id){
+          return subScopeTable;
+        } else {
+          let searchInChild = subScopeTable.getChildTable(id);
+          if(searchInChild){
+            return searchInChild;
+          }
+        }
+      } else if(symbol.id === id) {
+        throw new TypeError('syntax Error: this id can\'t have scope')
+      }
+    }
+  }
 }
 
 class Symbol {
@@ -80,6 +110,10 @@ class Symbol {
 
   getWidth(){
     return this.width;
+  }
+
+  getChildScope(){
+    return this.childScope;
   }
 }
 

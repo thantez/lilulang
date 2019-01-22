@@ -9,6 +9,11 @@ class SymbolTable {
   }
 
   addSymbol(symbol) {
+    this.symbols.forEach(s => {
+      if(symbol.id && symbol.id === s.id){
+        throw new TypeError(`syntax Error: Identifier ${symbol.id} has already been declared in ${/* TODO: error address */null}`)
+      }
+    })
     this.symbols.push(symbol);
     this.size = this.size + symbol.getWidth();
   }
@@ -56,7 +61,12 @@ class Symbol {
         this.width = 8;
         break;
       case 'string':
-        this.width = (typeObj.value.length + 1)*2;
+        if(typeObj.value instanceof Array){
+          this.width = (typeObj.value.length + 1)*2;
+        } else {
+          this.width = 2;
+          console.log(typeObj)
+        }
         break;
       default:
         this.width = 4;

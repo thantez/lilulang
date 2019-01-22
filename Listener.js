@@ -35,7 +35,7 @@ class Listener extends listener {
     //DONE: globalTable size
     //TODO: check start function is in program or not
     //TODO: symbol table of classes and etc ...
-    fs.writeFileSync('.temp/symbolTable_output.json', JSON.stringify(this.globalTable, null, 2), 'utf-8');
+    fs.writeFileSync('.temp/symbolTable_output.txt', util.inspect(this.globalTable), 'utf-8');
     this.state = 'Program';
   }
 
@@ -52,12 +52,107 @@ class Listener extends listener {
   enterType_dcl(ctx) {
     let idCtx = ctx.ID();
     let id = toText(idCtx);
-    let typeObj = typeObjCreator(false);
+    let typeObj = {
+      type:'userType',
+      value: id
+    };
     if (this.state === 'declare') {
-      let typeSymbol = new Symbol(id, typeObj, 4, this.globalTable.getNewOffset());
+      let typeTable = new SymbolTable(id, {type: id}, this.globalTable)
+      let typeSymbol = new Symbol(id, typeObj, this.globalTable.getNewOffset(), typeTable);
       this.globalTable.addSymbol(typeSymbol);
     }
   }
+  // #region function declare
+
+  exitFunc_dcl(ctx){
+    let returnableArgs = null;
+    let returnableArgsTypes = null;
+    let mainArgs = null;
+    let mainArgsTypes = null;
+    if(ctx.ASSIGN()){
+      returnableArgs = ctx.getChild(1);
+      returnableArgsTypes = returnableArgs.typeObj;
+      if(ctx.children.length == 8){
+        mainArgsTypes = [];
+      } else {
+        mainArgs = ctx.getChild(6);
+        mainArgsTypes = mainArgs.typeObj;
+      }
+    }
+    else{
+      returnableArgsTypes = [];
+      if(ctx.children.length == 4){
+        mainArgsTypes = [];
+      } else {
+        mainArgs = ctx.getChild(2);
+        mainArgsTypes = mainArgs.typeObj;
+      }
+    }
+    //TODO: BUG: when place '.' instead of ',' it throw mainArgs is undefined!
+
+    // creation for function table, pointing to global table by parent scope
+    let functionTable = new SymbolTable(toText(ctx.ID()), {
+      type: 'function',
+      defineValue: toText(ctx)
+    }, this.globalTable);
+
+    // creation for function symbol that is a way for access to function table, pointing to
+    // function table by child scope
+    let functionSymbol = new Symbol(toText(ctx.ID()), {
+      type: 'function',
+      defineValue: toText(ctx)
+    }, this.globalTable.getNewOffset(), functionTable)
+
+    // add function symbol to global table
+    this.globalTable.addSymbol(functionSymbol)
+    
+    // add return symbols to function table
+    returnableArgsTypes.forEach(typeObj => {
+      let argSymbol = new Symbol(typeObj.id, {type: typeObj.type, value: typeObj.value, return: true}, functionTable.getNewOffset(), null);
+      functionTable.addSymbol(argSymbol);
+    });
+    
+    // add arguments symbols to function table
+    mainArgsTypes.forEach(typeObj => {
+      let argSymbol = new Symbol(typeObj.id, {type: typeObj.type, value: typeObj.value, return: false}, functionTable.getNewOffset(), null);
+      functionTable.addSymbol(argSymbol);
+    });
+
+  }
+
+  exitArgsType(ctx){
+    //TODO: arrays
+    ctx.typeObj = [ctx.type().typeObj]
+  }
+
+  exitArgsArgs(ctx){
+    let argsType = ctx.args().typeObj;
+    let newArgType = ctx.type().typeObj;
+    argsType.push(newArgType)
+    ctx.typeObj = argsType;
+  }
+
+  exitArgs_variableType(ctx){
+    //TODO: arrays
+    let typeObj = {
+      type: ctx.type().typeObj.type,
+      id: toText(ctx.ID())
+    };
+    ctx.typeObj = [typeObj]
+  }
+
+  exitArgs_variableArgs_variable(ctx){
+    let argsType = ctx.args_variable().typeObj;
+    let newArg = ctx.type();
+    let newId = ctx.ID();
+    let newArgTypeObj = {
+      type: newArg.typeObj.type,
+      id: toText(newId)
+    };
+    argsType.push(newArgTypeObj)
+    ctx.typeObj = argsType;
+  }
+  // #endregion
 
   exitVariable_def(ctx){
     let preType = (ctx.CONST()? 'const':'var');
@@ -73,6 +168,7 @@ class Listener extends listener {
     vars.forEach(vr => {
       let id = vr.id;
       let vrType = vr.typeObj;
+      vrType.preType = preType;
       if (vrType){
         if (vrType.type != type){
           throw new Error(`type Error: expected ${type} but found ${vrType.type} in ${/* TODO: error address */null}`)
@@ -89,6 +185,7 @@ class Listener extends listener {
     });
     
     //if()
+  
   }
 
   enterVariable_val(ctx){
@@ -271,6 +368,13 @@ class Listener extends listener {
   }
 
   // #endregion
+
+  exitType(ctx){
+    ctx.typeObj = {
+      type: toText(ctx)
+    }
+  }
+
 
   // #endregion
 }

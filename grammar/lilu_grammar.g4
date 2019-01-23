@@ -115,7 +115,8 @@ component: access_modifier? ( variable_def | fun_def);
 
 type_def: TYPE ID ( COLON ID)? LBRACE component+ RBRACE;
 
-ft_def: type_def # ft_defType | fun_def # ft_defFun;
+ft_def: type_def # ft_defType 
+| fun_def # ft_defFun;
 
 def: ft_def+;
 

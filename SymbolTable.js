@@ -5,13 +5,14 @@ class SymbolTable {
     this.parentScope = parentScope;
     this.offset = 0;
     this.size = 0;
+    this.isImplemented = false;
     this.symbols = [];
   }
 
-  addSymbol(symbol) {
+  addSymbol(symbol, ctx) {
     this.symbols.forEach(s => {
       if(symbol.id && symbol.id === s.id){
-        throw new TypeError(`syntax Error: Identifier ${symbol.id} has already been declared in ${/* TODO: error address */null}`)
+        throw new TypeError(`syntax Error: Identifier ${symbol.id} has already been declared in Line: ${ctx.start.line}, Column: ${ctx.start.column}`)
       }
     })
     this.symbols.push(symbol);
@@ -26,7 +27,7 @@ class SymbolTable {
     this.size = size;
   }
 
-  getNewOffset(width){
+  getNewOffset(){
     return this.size;
   }
 
@@ -58,6 +59,10 @@ class SymbolTable {
         throw new TypeError('syntax Error: this id can\'t have scope')
       }
     }
+  }
+
+  isEmpty(){
+    return this.symbols.length === 0;
   }
 }
 

@@ -9,11 +9,17 @@ const_val:
 	| HEX_CONST		# const_valHEX
 	| REAL_CONST	# const_valREAL
 	| BOOL_CONST	# const_valBOOL
-	| STRING_CONST	# const_valSTRING;
+	| STRING_CONST	# const_valSTRING
+	;
 
 //types
 
-type: INT | BOOL | FLOAT | STRING | ID;
+type: INT
+    | BOOL
+    | FLOAT
+    | STRING
+    | ID
+    ;
 
 // variable def var def
 
@@ -30,11 +36,13 @@ variable_def:
 
 args:
 	type (LBRACK RBRACK)*						# argsType
-	| args COMMA type ( LBRACK RBRACK)*		# argsArgs;
+	| args COMMA type ( LBRACK RBRACK)* 		# argsArgs
+	;
 
 args_variable:
-	type (LBRACK RBRACK)* ID								# args_variableType
-	| args_variable COMMA type (LBRACK RBRACK)* ID	# args_variableArgs_variable;
+    type (LBRACK RBRACK)* ID							# args_variableType
+	| args_variable COMMA type (LBRACK RBRACK)* ID	    # args_variableArgs_variable
+	;
 
 func_dcl:
 	(LPAREN args RPAREN ASSIGN)? ID LPAREN (args | args_variable)? RPAREN SEMI;
@@ -52,21 +60,25 @@ cond_stmt:
 	IF expr block (ELSE block)? # cond_stmtIF
 	| SWITCH variable LBRACE (
 		CASE (INT_CONST | HEX_CONST) COLON block
-	)* DEFAULT COLON block RBRACE # cond_stmtSWITCH;
+	)* DEFAULT COLON block RBRACE # cond_stmtSWITCH
+	;
 
 loop_stmt:
 	FOR (type? assign)? SEMI expr SEMI assign? block	# loop_stmtFOR
-	| WHILE expr block											# loop_stmtWHILE;
+	| WHILE expr block									# loop_stmtWHILE;
 
 list: LBRACK ( expr | list) ( COMMA ( expr | list))* RBRACK;
 
-params: expr # paramsExpr | expr COMMA params 	# paramsExprCOMMA;
+params: expr # paramsExpr
+      | expr COMMA params 	# paramsExprCOMMA
+      ;
 
 handle_call: ID LPAREN params? RPAREN;
 
 func_call: (variable DOT)? handle_call	# func_callVariable
-	| READ LPAREN variable RPAREN			# func_callREAD
-	| WRITE LPAREN variable RPAREN		# func_callWRITE;
+	| READ LPAREN variable RPAREN		# func_callREAD
+	| WRITE LPAREN variable RPAREN		# func_callWRITE
+	;
 
 stmt:
 	assign SEMI										# stmtAssign
@@ -75,24 +87,25 @@ stmt:
 	| loop_stmt										# stmtLoop_stmt
 	| RETURN SEMI									# stmtRETURN
 	| BREAK SEMI									# stmtBREAK
-	| CONTINUE SEMI								# stmtCONTINUE
-	| DESTRUCT (LBRACK RBRACK)* ID SEMI		# stmtDESTRUCT;
+	| CONTINUE SEMI								    # stmtCONTINUE
+	| DESTRUCT (LBRACK RBRACK)* ID SEMI		        # stmtDESTRUCT
+	;
 
 //block
 
 block: LBRACE (variable_def | stmt)* RBRACE;
 
 expr:
-	unary_op expr										# exprUnary_op
-	| expr (MUL | DIV | MOD) expr					# exprExprMulDivMod
-	| expr (ADD | SUB) expr							# exprExprAddSub
-	| expr (LT | GT) expr							# exprExprLtGt
+	unary_op expr								# exprUnary_op
+	| expr (MUL | DIV | MOD) expr				# exprExprMulDivMod
+	| expr (ADD | SUB) expr						# exprExprAddSub
+	| expr (LT | GT) expr						# exprExprLtGt
 	| expr (EQUAL | NOTEQUAL | LE | GE) expr	# exprExprEqualNotequalLeGe
-	| expr BITAND expr								# exprExprBitand
-	| expr CARET expr									# exprExprCaret
-	| expr BITOR expr									# exprExprBitor
-	| expr AND expr									# exprExprAnd
-	| expr OR expr										# exprExprOr
+	| expr BITAND expr							# exprExprBitand
+	| expr CARET expr							# exprExprCaret
+	| expr BITOR expr							# exprExprBitor
+	| expr AND expr								# exprExprAnd
+	| expr OR expr								# exprExprOr
 	| (
 		LPAREN expr RPAREN
 		| ID
@@ -102,7 +115,8 @@ expr:
 		| variable
 		| list
 		| NIL
-	) # exprParen;
+	) # exprParen
+	;
 
 //functions
 
@@ -115,8 +129,9 @@ component: access_modifier? ( variable_def | fun_def);
 
 type_def: TYPE ID ( COLON ID)? LBRACE component+ RBRACE;
 
-ft_def: type_def # ft_defType 
-| fun_def # ft_defFun;
+ft_def: type_def    # ft_defType
+      | fun_def     # ft_defFun
+      ;
 
 def: ft_def+;
 
@@ -124,7 +139,10 @@ def: ft_def+;
 
 assign: (variable | LPAREN variable ( COMMA variable)* RPAREN) ASSIGN expr;
 
-unary_op: SUB | BANG | TILDE;
+unary_op: SUB
+        | BANG
+        | TILDE
+        ;
 
 ASSIGN: '=';
 GT: '>';

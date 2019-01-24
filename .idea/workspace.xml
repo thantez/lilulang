@@ -16,8 +16,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Listener.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="488" lean-forward="true" selection-start-line="488" selection-end-line="488" />
+            <state relative-caret-position="615">
+              <caret line="692" column="35" selection-start-line="692" selection-start-column="35" selection-end-line="692" selection-end-column="35" />
               <folding>
                 <element signature="n#!!block;n#toText#0" expanded="true" />
                 <element signature="n#!!block;n#relopType#0" expanded="true" />
@@ -69,6 +69,7 @@
                 <element signature="n#!!block;n#exitConst_valHEX#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitConst_valSTRING#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterList#0;n#Listener#0" expanded="true" />
+                <element signature="n#!!block;n#exitList#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitType#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterExprExprMulDivMod#1;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitExprExprMulDivMod#1;n#Listener#0" expanded="true" />
@@ -83,6 +84,37 @@
                 <element signature="n#!!block;n#enterBlock#0;n#Listener#0" expanded="true" />
                 <element signature="e#17306#17606#0" expanded="true" />
                 <element signature="e#17710#18011#0" expanded="true" />
+                <element signature="n#!!block;n#exitCond_stmtIF#0;n#Listener#0" expanded="true" />
+                <element signature="n#!!block;n#enterCond_stmtSWITCH#0;n#Listener#0" expanded="true" />
+                <element signature="n#!!block;n#enterLoop_stmtFOR#0;n#Listener#0" expanded="true" />
+                <element signature="n#!!block;n#exitLoop_stmtFOR#0;n#Listener#0" expanded="true" />
+                <element signature="n#!!block;n#exitLoop_stmtWHILE#0;n#Listener#0" expanded="true" />
+                <element signature="n#!!block;n#exitStmtBREAK#0;n#Listener#0" expanded="true" />
+                <element signature="n#!!block;n#exitStmtCONTINUE#0;n#Listener#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/SymbolTable.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="30">
+              <caret line="1" column="24" lean-forward="true" selection-start-line="1" selection-start-column="24" selection-end-line="1" selection-end-column="24" />
+              <folding>
+                <element signature="n#!!block;n#constructor#0;n#SymbolTable#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib/lilu_grammarListener.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="568">
+              <caret line="351" column="47" lean-forward="true" selection-start-line="351" selection-start-column="31" selection-end-line="351" selection-end-column="47" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -105,8 +137,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/grammar/lilu_grammar.g4">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="61" column="8" selection-start-line="61" selection-start-column="8" selection-end-line="61" selection-end-column="8" />
+            <state relative-caret-position="397">
+              <caret line="90" column="14" selection-start-line="90" selection-start-column="6" selection-end-line="90" selection-end-column="14" />
             </state>
           </provider>
         </entry>
@@ -131,6 +163,18 @@
       <find>typeObj</find>
       <find>mul</find>
       <find>muldiv</find>
+      <find>funcs</find>
+      <find>enterCond</find>
+      <find>ctx.</find>
+      <find>loop</find>
+      <find>block</find>
+      <find>stmt</find>
+      <find>break</find>
+      <find>throw</find>
+      <find>symboltable</find>
+      <find>global</find>
+      <find>usertype</find>
+      <find>destruct</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -195,6 +239,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="preferences.intentionPowerPack" />
     <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
@@ -233,7 +278,7 @@
       <workItem from="1548236939659" duration="1841000" />
       <workItem from="1548256265794" duration="8501000" />
       <workItem from="1548311531425" duration="2965000" />
-      <workItem from="1548358895537" duration="441000" />
+      <workItem from="1548358895537" duration="5716000" />
     </task>
     <task id="LOCAL-00001" summary="type checking rules for expr">
       <created>1548277087568</created>
@@ -242,17 +287,24 @@
       <option name="project" value="LOCAL" />
       <updated>1548277087569</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="code clean up == -&gt; ===">
+      <created>1548359364662</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1548359364662</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="13748000" />
+    <option name="totallyTimeSpent" value="19023000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-6" y="-6" width="1549" height="837" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18175721" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18175721" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -294,7 +346,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="type checking rules for expr" />
-    <option name="LAST_COMMIT_MESSAGE" value="type checking rules for expr" />
+    <MESSAGE value="code clean up == -&gt; ===" />
+    <option name="LAST_COMMIT_MESSAGE" value="code clean up == -&gt; ===" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/.temp/symbolTable_output.txt" />
@@ -315,17 +368,37 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/lib/lilu_grammarListener.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="568">
+          <caret line="351" column="47" lean-forward="true" selection-start-line="351" selection-start-column="31" selection-end-line="351" selection-end-column="47" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SymbolTable.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="1" column="24" lean-forward="true" selection-start-line="1" selection-start-column="24" selection-end-line="1" selection-end-column="24" />
+          <folding>
+            <element signature="n#!!block;n#constructor#0;n#SymbolTable#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/grammar/lilu_grammar.g4">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="61" column="8" selection-start-line="61" selection-start-column="8" selection-end-line="61" selection-end-column="8" />
+        <state relative-caret-position="397">
+          <caret line="90" column="14" selection-start-line="90" selection-start-column="6" selection-end-line="90" selection-end-column="14" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Listener.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="488" lean-forward="true" selection-start-line="488" selection-end-line="488" />
+        <state relative-caret-position="615">
+          <caret line="692" column="35" selection-start-line="692" selection-start-column="35" selection-end-line="692" selection-end-column="35" />
           <folding>
             <element signature="n#!!block;n#toText#0" expanded="true" />
             <element signature="n#!!block;n#relopType#0" expanded="true" />
@@ -377,6 +450,7 @@
             <element signature="n#!!block;n#exitConst_valHEX#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitConst_valSTRING#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterList#0;n#Listener#0" expanded="true" />
+            <element signature="n#!!block;n#exitList#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitType#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterExprExprMulDivMod#1;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitExprExprMulDivMod#1;n#Listener#0" expanded="true" />
@@ -391,6 +465,13 @@
             <element signature="n#!!block;n#enterBlock#0;n#Listener#0" expanded="true" />
             <element signature="e#17306#17606#0" expanded="true" />
             <element signature="e#17710#18011#0" expanded="true" />
+            <element signature="n#!!block;n#exitCond_stmtIF#0;n#Listener#0" expanded="true" />
+            <element signature="n#!!block;n#enterCond_stmtSWITCH#0;n#Listener#0" expanded="true" />
+            <element signature="n#!!block;n#enterLoop_stmtFOR#0;n#Listener#0" expanded="true" />
+            <element signature="n#!!block;n#exitLoop_stmtFOR#0;n#Listener#0" expanded="true" />
+            <element signature="n#!!block;n#exitLoop_stmtWHILE#0;n#Listener#0" expanded="true" />
+            <element signature="n#!!block;n#exitStmtBREAK#0;n#Listener#0" expanded="true" />
+            <element signature="n#!!block;n#exitStmtCONTINUE#0;n#Listener#0" expanded="true" />
           </folding>
         </state>
       </provider>

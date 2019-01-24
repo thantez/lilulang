@@ -14,6 +14,7 @@ function toText(ctx) {
     return null
 }
 
+//fixme chain cast?
 function relopType(t1, t2, ctx) {
     //go up to find lub
     if (t1 === t2) return t1;
@@ -645,7 +646,57 @@ class Listener extends listener {
 
     }
 
-    // #region funcs and stmts
+    exitCond_stmtIF(ctx) {
+        let valueType = ctx.expr().typeObj.type;
+        relopType(valueType, 'bool', ctx);
+    }
+
+    exitCond_stmtSWITCH(ctx) {
+        let valueType = ctx.variable().typeObj.type;
+        relopType(valueType, 'int', ctx);
+    }
+
+    enterLoop_stmtFOR(ctx) {
+        this.state = 'loop';
+    }
+    exitLoop_stmtFOR(ctx) {
+        let valueType = ctx.expr().typeObj.type;
+        relopType(valueType, 'bool', ctx);
+    }
+
+    enterLoop_stmtWHILE(ctx) {
+        this.state = 'loop';
+    }
+    exitLoop_stmtWHILE(ctx) {
+        let valueType = ctx.expr().typeObj.type;
+        relopType(valueType, 'bool', ctx);
+    }
+
+    exitStmtBREAK(ctx) {
+        if (this.state !== 'loop') {
+            throw new ScopeError(`scope Error: break must be used inside loop`)
+        }
+    }
+
+    exitStmtCONTINUE(ctx) {
+        if (this.state !== 'loop') {
+            throw new ScopeError(`scope Error: continue must be used inside loop`)
+        }
+    }
+
+    exitStmtDESTRUCT(ctx) {
+        let type = ctx.ID.typeObj.type;
+        if (type.typeObj.type !== 'userType')
+            throw new typeError(`type Error: destruct can be used with userTypes`);
+        //todo array
+        // else if (type === 'array')
+        // if ((ctx.children.length - 3) / 2 !== arrayDimension)
+        //     throw new typeError(`type Error: type mismatch`);
+    }
+
+
+
+        // #region funcs and stmts
 
     // #endregion
 

@@ -217,7 +217,7 @@ class Listener extends listener {
             let vrType = vr.typeObj;
             vrType.preType = preType;
             if (vrType) {
-                if (vrType.type != type) {
+                if (vrType.type !== type) {
                     throw new Error(`type Error: expected ${type} but found ${vrType.type} in ${/* TODO: error address */null}`)
                 }
                 typeObj = vrType;
@@ -450,7 +450,8 @@ class Listener extends listener {
     exitConst_valBOOL(ctx) {
         ctx.typeObj = {
             type: 'bool',
-            value: (toText(ctx) === 'false' ? false : true)
+            value: (toText(ctx) !== 'false')
+            // value: (toText(ctx) === 'false' ? false : true)
         }
     }
 
@@ -487,7 +488,7 @@ class Listener extends listener {
         // 2 steps because of COMMA in list, skip child(0) and cild(length-1) because of '[]'
         for (let i = 2; i < ctx.children.length - 1; i += 2) {
             let itemType = ctx.getChild(i).typeObj.type
-            if (listType != itemType) {
+            if (listType !== itemType) {
                 throw new TypeError(`type Error: expected ${listType} but found ${itemType} in ${/* TODO: error address */null}`)
             }
         }
@@ -604,7 +605,7 @@ class Listener extends listener {
     }
 
     enterBlock(ctx) {
-        if (this.state = 'fundef') {
+        if (this.state === 'fundef') {
             ctx = ctx.parentCtx;
             let returnableArgsTypes, mainArgsTypes = null;
             if (ctx.ASSIGN()) {
@@ -614,7 +615,7 @@ class Listener extends listener {
                 returnableArgsTypes = [];
                 mainArgsTypes = ctx.getChild(3).typeObj;
             }
-            if (mainArgsTypes == undefined) {
+            if (mainArgsTypes === undefined) {
                 mainArgsTypes = [];
             }
             let functionTable = ctx.table;

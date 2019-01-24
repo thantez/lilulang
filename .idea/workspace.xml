@@ -4,7 +4,6 @@
     <list default="true" id="579cd498-d8a8-4cb4-90cd-68fb88b13336" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Listener.js" beforeDir="false" afterPath="$PROJECT_DIR$/Listener.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grammar/lilu_grammar.g4" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/lilu_grammar.g4" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -17,12 +16,12 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Listener.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-166">
-              <caret line="707" column="16" lean-forward="true" selection-start-line="707" selection-start-column="16" selection-end-line="707" selection-end-column="16" />
+            <state relative-caret-position="30">
+              <caret line="488" lean-forward="true" selection-start-line="488" selection-end-line="488" />
               <folding>
                 <element signature="n#!!block;n#toText#0" expanded="true" />
-                <element signature="n#!!block;n#max#0" expanded="true" />
-                <element signature="n#!!block;n#f#0" expanded="true" />
+                <element signature="n#!!block;n#relopType#0" expanded="true" />
+                <element signature="n#!!block;n#widen#0" expanded="true" />
                 <element signature="n#!!block;n#constructor#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterProgram#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitProgram#0;n#Listener#0" expanded="true" />
@@ -30,14 +29,14 @@
                 <element signature="n#!!block;n#exitFt_dcl#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterType_dcl#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitFunc_dcl#0;n#Listener#0" expanded="true" />
-                <element signature="e#3124#3320#0" expanded="true" />
-                <element signature="e#3408#3605#0" expanded="true" />
+                <element signature="e#4402#4674#0" expanded="true" />
+                <element signature="e#4770#5043#0" expanded="true" />
                 <element signature="n#!!block;n#exitArgsType#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitArgsArgs#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitArgs_variableType#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitArgs_variableArgs_variable#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitVariable_def#0;n#Listener#0" expanded="true" />
-                <element signature="e#4586#5102#0" expanded="true" />
+                <element signature="e#6163#6801#0" expanded="true" />
                 <element signature="n#!!block;n#enterVariable_val#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitVariable_val#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterRef#0;n#Listener#0" expanded="true" />
@@ -51,7 +50,7 @@
                 <element signature="n#!!block;n#enterExprExprLtGt#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitExprExprLtGt#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterExprExprEqualNotequalLeGe#0;n#Listener#0" expanded="true" />
-                <element signature="e#10025#10665#0" expanded="true" />
+                <element signature="n#!!block;n#exitExprExprEqualNotequalLeGe#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterExprExprBitand#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitExprExprBitand#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterExprExprCaret#0;n#Listener#0" expanded="true" />
@@ -70,7 +69,6 @@
                 <element signature="n#!!block;n#exitConst_valHEX#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitConst_valSTRING#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterList#0;n#Listener#0" expanded="true" />
-                <element signature="n#!!block;n#exitList#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitType#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterExprExprMulDivMod#1;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitExprExprMulDivMod#1;n#Listener#0" expanded="true" />
@@ -83,8 +81,8 @@
                 <element signature="n#!!block;n#enterFun_def#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#exitFun_def#0;n#Listener#0" expanded="true" />
                 <element signature="n#!!block;n#enterBlock#0;n#Listener#0" expanded="true" />
-                <element signature="e#15021#15321#0" expanded="true" />
-                <element signature="e#15425#15726#0" expanded="true" />
+                <element signature="e#17306#17606#0" expanded="true" />
+                <element signature="e#17710#18011#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -99,7 +97,7 @@
         <entry file="file://$PROJECT_DIR$/tests/type.ll">
           <provider selected="true" editor-type-id="text-editor">
             <state>
-              <caret column="9" lean-forward="true" selection-start-column="9" selection-end-column="9" />
+              <caret column="9" selection-start-column="9" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -107,8 +105,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/grammar/lilu_grammar.g4">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3832">
-              <caret line="226" selection-start-line="226" selection-end-line="226" />
+            <state relative-caret-position="390">
+              <caret line="61" column="8" selection-start-line="61" selection-start-column="8" selection-end-line="61" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -159,6 +157,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Course" />
       <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
@@ -187,13 +186,12 @@
         </subPane>
       </pane>
       <pane id="Scope" />
-      <pane id="Course" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1548277018182" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1548277053230" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
@@ -233,18 +231,28 @@
       <option name="presentableId" value="Default" />
       <updated>1548236935911</updated>
       <workItem from="1548236939659" duration="1841000" />
-      <workItem from="1548256265794" duration="8392000" />
+      <workItem from="1548256265794" duration="8501000" />
+      <workItem from="1548311531425" duration="2965000" />
+      <workItem from="1548358895537" duration="441000" />
     </task>
+    <task id="LOCAL-00001" summary="type checking rules for expr">
+      <created>1548277087568</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1548277087569</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="10233000" />
+    <option name="totallyTimeSpent" value="13748000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-6" y="-6" width="1549" height="837" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17303823" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18175721" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -265,7 +273,7 @@
       <window_info anchor="bottom" id="Tool Output" order="10" />
       <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
       <window_info anchor="bottom" id="Database Changes" order="12" />
-      <window_info anchor="bottom" id="Version Control" order="13" />
+      <window_info anchor="bottom" id="Version Control" order="13" weight="0.32956153" />
       <window_info anchor="bottom" id="Flutter Performance" order="14" side_tool="true" />
       <window_info anchor="bottom" id="ANTLR Preview" order="15" weight="0.32956153" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -284,6 +292,10 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="type checking rules for expr" />
+    <option name="LAST_COMMIT_MESSAGE" value="type checking rules for expr" />
+  </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/.temp/symbolTable_output.txt" />
     <entry file="file://$PROJECT_DIR$/index.js">
@@ -293,31 +305,31 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/type.ll">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="9" lean-forward="true" selection-start-column="9" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.config.json">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/type.ll">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="9" selection-start-column="9" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/grammar/lilu_grammar.g4">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3832">
-          <caret line="226" selection-start-line="226" selection-end-line="226" />
+        <state relative-caret-position="390">
+          <caret line="61" column="8" selection-start-line="61" selection-start-column="8" selection-end-line="61" selection-end-column="8" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Listener.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-166">
-          <caret line="707" column="16" lean-forward="true" selection-start-line="707" selection-start-column="16" selection-end-line="707" selection-end-column="16" />
+        <state relative-caret-position="30">
+          <caret line="488" lean-forward="true" selection-start-line="488" selection-end-line="488" />
           <folding>
             <element signature="n#!!block;n#toText#0" expanded="true" />
-            <element signature="n#!!block;n#max#0" expanded="true" />
-            <element signature="n#!!block;n#f#0" expanded="true" />
+            <element signature="n#!!block;n#relopType#0" expanded="true" />
+            <element signature="n#!!block;n#widen#0" expanded="true" />
             <element signature="n#!!block;n#constructor#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterProgram#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitProgram#0;n#Listener#0" expanded="true" />
@@ -325,14 +337,14 @@
             <element signature="n#!!block;n#exitFt_dcl#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterType_dcl#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitFunc_dcl#0;n#Listener#0" expanded="true" />
-            <element signature="e#3124#3320#0" expanded="true" />
-            <element signature="e#3408#3605#0" expanded="true" />
+            <element signature="e#4402#4674#0" expanded="true" />
+            <element signature="e#4770#5043#0" expanded="true" />
             <element signature="n#!!block;n#exitArgsType#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitArgsArgs#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitArgs_variableType#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitArgs_variableArgs_variable#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitVariable_def#0;n#Listener#0" expanded="true" />
-            <element signature="e#4586#5102#0" expanded="true" />
+            <element signature="e#6163#6801#0" expanded="true" />
             <element signature="n#!!block;n#enterVariable_val#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitVariable_val#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterRef#0;n#Listener#0" expanded="true" />
@@ -346,7 +358,7 @@
             <element signature="n#!!block;n#enterExprExprLtGt#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitExprExprLtGt#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterExprExprEqualNotequalLeGe#0;n#Listener#0" expanded="true" />
-            <element signature="e#10025#10665#0" expanded="true" />
+            <element signature="n#!!block;n#exitExprExprEqualNotequalLeGe#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterExprExprBitand#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitExprExprBitand#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterExprExprCaret#0;n#Listener#0" expanded="true" />
@@ -365,7 +377,6 @@
             <element signature="n#!!block;n#exitConst_valHEX#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitConst_valSTRING#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterList#0;n#Listener#0" expanded="true" />
-            <element signature="n#!!block;n#exitList#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitType#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterExprExprMulDivMod#1;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitExprExprMulDivMod#1;n#Listener#0" expanded="true" />
@@ -378,8 +389,8 @@
             <element signature="n#!!block;n#enterFun_def#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#exitFun_def#0;n#Listener#0" expanded="true" />
             <element signature="n#!!block;n#enterBlock#0;n#Listener#0" expanded="true" />
-            <element signature="e#15021#15321#0" expanded="true" />
-            <element signature="e#15425#15726#0" expanded="true" />
+            <element signature="e#17306#17606#0" expanded="true" />
+            <element signature="e#17710#18011#0" expanded="true" />
           </folding>
         </state>
       </provider>

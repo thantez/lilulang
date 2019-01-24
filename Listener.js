@@ -2,8 +2,6 @@ const listener = require('./lib/lilu_grammarListener').lilu_grammarListener;
 const fs = require('fs');
 const SymbolTable = require('./SymbolTable').symbolTable;
 const Symbol = require('./SymbolTable').symbol;
-const util = require('util');
-const pj = require('pretty-print-json');
 const json = require('json-stringify-safe')
 
 // #region functions
@@ -16,7 +14,7 @@ function toText(ctx) {
     return null
 }
 
-function relopType(t1, t2) {
+function relopType(t1, t2, ctx) {
     //go up to find lub
     if (t1 === t2) return t1;
     else
@@ -24,17 +22,28 @@ function relopType(t1, t2) {
             case 'int':
                 if (t2 === 'float')
                     return 'float';
-                if (t2 === 'bool')
+                else if (t2 === 'bool')
                     return 'int';
+                else if (t2 === 'string')
+                    return 'string';
+                break;
 
-                break;
             case 'float':
+                if (t2 === 'int')
+                    return 'float';
                 break;
+
             case 'string':
+                if (t2 === 'bool')
+                    return 'string';
+                else if (t2 === 'int')
+                    return 'string';
                 break;
             case 'bool':
-                break;
+                return t1;
+            
         }
+        throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`)
 }
 
 function widen(a, t, w) {
@@ -44,8 +53,6 @@ function widen(a, t, w) {
 }
 
 // #endregion
-
-
 class Listener extends listener {
     constructor() {
         super();
@@ -66,7 +73,7 @@ class Listener extends listener {
         //TODO: check start function is in program or not
         //TODO: symbol table of classes and etc ...
         fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
-        this.state = 'Program';
+        this.state = '';
     }
 
     // #region program
@@ -91,7 +98,7 @@ class Listener extends listener {
             value: id
         };
         if (this.state === 'declare') {
-            let typeTable = new SymbolTable(id, {type: id}, null)
+            let typeTable = new SymbolTable(id, { type: id }, null)
             let typeSymbol = new Symbol(id, typeObj, this.globalTable.getNewOffset(), typeTable);
             this.globalTable.addSymbol(typeSymbol, ctx);
         }
@@ -107,7 +114,7 @@ class Listener extends listener {
         if (ctx.ASSIGN()) {
             returnableArgs = ctx.getChild(1);
             returnableArgsTypes = returnableArgs.typeObj;
-            if (ctx.children.length == 8) {
+            if (ctx.children.length === 8) {
                 mainArgsTypes = [];
             } else {
                 mainArgs = ctx.getChild(6);
@@ -115,7 +122,7 @@ class Listener extends listener {
             }
         } else {
             returnableArgsTypes = [];
-            if (ctx.children.length == 4) {
+            if (ctx.children.length === 4) {
                 mainArgsTypes = [];
             } else {
                 mainArgs = ctx.getChild(2);
@@ -247,7 +254,6 @@ class Listener extends listener {
     enterRef(ctx) {
 
     }
-
     exitRef(ctx) {
 
     }
@@ -256,508 +262,395 @@ class Listener extends listener {
 
     enterExprUnary_op(ctx) {
     }
-
     exitExprUnary_op(ctx) {
+        let op = ctx.getChild(1);
+        let operator = ctx.getChild(0);
+
+        switch(toText(operator)) {
+            case '-': 
+                return {type: op.typeObj.type}
+            case '!':
+                return {type: (relopType(op.typeObj.type, 'bool', ctx)? 'bool': '' )};
+            case '~':
+                return {type: (relopType(op.typeObj.type, 'int', ctx)? 'int': '')};
+
+        }
     }
 
     enterExprExprMulDivMod(ctx) {
     }
-
     exitExprExprMulDivMod(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
 
-//todo bool?
-        if (op1.type === 'int' || op1.type === 'float') {
-            if (op2.type === 'int' || op2.type === 'float') {
-                if (op1.type === op2.type) {
-                    // ctx.typeObj.type = op1.type;
-                    ctx.typeObj = {
-                        type: op1.typeObj.type,
-                        value: toText(ctx)
-                    };
-                } else {
-                    // ctx.typeObj.type = 'float';
-                    ctx.typeObj = {
-                        type: 'float',
-                        value: toText(ctx)
-                    };
-                }
-            }
+        ctx.typeObj = {
+            type: relopType(op1.typeObj.type, op2.typeObj.type, ctx),
+            value: toText(ctx)
         }
-        if (!ctx.typeObj.type) {
-            throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`);
-        }
-        // if (op1.typeObj.type != op2.typeObj.type) {
-        // TODO: type checking for type cast
-        // }
-
-        // ctx.typeObj = {
-        //     type: op1.typeObj.type,
-        //     value: toText(ctx)
-        // };
-
-        //todo find value
+        
+        //TODO: find value
     }
 
     enterExprExprAddSub(ctx) {
     }
-
     exitExprExprAddSub(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
 
-        if (op1.type === 'int' || op1.type === 'float') {
-            if (op2.type === 'int' || op2.type === 'float') {
-                if (op1.type === op2.type) {
-                    // ctx.typeObj.type = op1.type;
-                    ctx.typeObj = {
-                        type: op1.typeObj.type,
-                        value: toText(ctx)
-                    };
-                } else {
-                    // ctx.typeObj.type = 'float';
-                    ctx.typeObj = {
-                        type: 'float',
-                        value: toText(ctx)
-                    };
-                }
-            }
+        ctx.typeObj = {
+            type: relopType(op1.typeObj.type, op2.typeObj.type, ctx),
+            value: toText(ctx)
         }
-        if (!ctx.typeObj.type) {
-            throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`);
-        }
+        
+        //TODO: find value
     }
 
     enterExprExprLtGt(ctx) {
     }
-
     exitExprExprLtGt(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-
-        if (op1.type === 'int' || op1.type === 'float') {
-            if (op2.type === 'int' || op2.type === 'float') {
-                ctx.typeObj = {
-                    type: 'bool',
-                    value: toText(ctx)
-                }
-            }
+        relopType(op1.typeObj.type, op2.typeObj.type, ctx);
+        ctx.typeObj = {
+            type: 'bool',
+            value: toText(ctx)
         }
+        
+        //TODO: find value
 
-        // if (op1.typeObj.type != op2.typeObj.type) {
-        // TODO: type checking for type cast
-        if (!ctx.typeObj)
-            throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`)
-        // }
     }
 
     enterExprExprEqualNotequalLeGe(ctx) {
     }
-
     exitExprExprEqualNotequalLeGe(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-
-        if (op1.type === 'int' || op1.type === 'float') {
-            if (op2.type === 'int' || op2.type === 'float') {
-                ctx.typeObj = {
-                    type: 'bool',
-                    value: toText(ctx)
-                }
-            }
-        }
-
-        // if (op1.typeObj.type != op2.typeObj.type) {
-        // TODO: type checking for type cast
-        if (!ctx.typeObj)
-            throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`)
-    }
-
-    ctx.typeObj = {
-        type: 'bool',
-        value: toText(ctx)
-    }
-
-
-enterExprExprBitand(ctx)
-{
-}
-
-exitExprExprBitand(ctx)
-{
-    let op1 = ctx.getChild(0);
-    let operator = toText(ctx.getChild(1));
-    let op2 = ctx.getChild(2);
-
-    if (op1.type === 'int' || op1.type === 'bool') {
-        if (op2.type === 'int' || op2.type === 'bool') {
-            ctx.typeObj = {
-                type: 'int',
-                value: toText(ctx)
-            }
+        relopType(op1.typeObj.type, op2.typeObj.type, ctx);
+        ctx.typeObj = {
+            type: 'bool',
+            value: toText(ctx)
         }
     }
 
-    // if (op1.typeObj.type != op2.typeObj.type) {
-    // TODO: type checking for type cast
-    if (!ctx.typeObj)
-        throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`)
-}
-
-enterExprExprCaret(ctx)
-{
-}
-
-exitExprExprCaret(ctx)
-{
-    let op1 = ctx.getChild(0);
-    let operator = toText(ctx.getChild(1));
-    let op2 = ctx.getChild(2);
-
-    if (op1.type === 'int' || op1.type === 'bool') {
-        if (op2.type === 'int' || op2.type === 'bool') {
-            ctx.typeObj = {
-                type: 'int',
-                value: toText(ctx)
-            }
-        }
+    enterExprExprBitand(ctx) {
     }
-
-    // if (op1.typeObj.type != op2.typeObj.type) {
-    // TODO: type checking for type cast
-    if (!ctx.typeObj)
-        throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`)
-}
-
-enterExprExprBitor(ctx)
-{
-}
-
-exitExprExprBitor(ctx)
-{
-    let op1 = ctx.getChild(0);
-    let operator = toText(ctx.getChild(1));
-    let op2 = ctx.getChild(2);
-
-    if (op1.type === 'int' || op1.type === 'bool') {
-        if (op2.type === 'int' || op2.type === 'bool') {
-            ctx.typeObj = {
-                type: 'int',
-                value: toText(ctx)
-            }
-        }
-    }
-
-    // if (op1.typeObj.type != op2.typeObj.type) {
-    // TODO: type checking for type cast
-    if (!ctx.typeObj)
-        throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`)
-}
-
-enterExprExprAnd(ctx)
-{
-}
-
-exitExprExprAnd(ctx)
-{
-    let op1 = ctx.getChild(0);
-    let operator = toText(ctx.getChild(1));
-    let op2 = ctx.getChild(2);
-
-    if (op1.type === 'bool') {
-        if (op2.type === 'bool') {
+    exitExprExprBitand(ctx) {
+        let op1 = ctx.getChild(0);
+        let operator = toText(ctx.getChild(1));
+        let op2 = ctx.getChild(2);
+        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx);
+        if (relopType(t3, 'int', ctx) === 'int') {
             ctx.typeObj = {
                 type: 'bool',
                 value: toText(ctx)
             }
-        }
-    }
-
-    // if (op1.typeObj.type != op2.typeObj.type) {
-    // TODO: type checking for type cast
-    if (!ctx.typeObj)
-        throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`)
-}
-
-enterExprExprOr(ctx)
-{
-}
-
-exitExprExprOr(ctx)
-{
-    let op1 = ctx.getChild(0);
-    let operator = toText(ctx.getChild(1));
-    let op2 = ctx.getChild(2);
-
-    if (op1.type === 'bool') {
-        if (op2.type === 'bool') {
-            ctx.typeObj = {
-                type: 'bool',
-                value: toText(ctx)
-            }
-        }
-    }
-
-    // if (op1.typeObj.type != op2.typeObj.type) {
-    // TODO: type checking for type cast
-    if (!ctx.typeObj)
-        throw new Error(`type Error: expected ${op1.typeObj.type} but found ${op2.typeObj.type} in ${/* TODO: error address */null}`)
-}
-
-enterExprParen(ctx)
-{
-}
-
-exitExprParen(ctx)
-{
-    let typeObj = null;
-    if (ctx.const_val()) {
-        typeObj = ctx.const_val().typeObj
-    } else if (ctx.list()) {
-        typeObj = ctx.list().typeObj
-    }
-    ctx.typeObj = typeObj;
-}
-
-// #endregion
-
-// #region const_val
-
-exitConst_valINT(ctx)
-{
-    ctx.typeObj = {
-        type: 'int',
-        value: toText(ctx)
-    }
-}
-
-exitConst_valBOOL(ctx)
-{
-    ctx.typeObj = {
-        type: 'bool',
-        value: (toText(ctx) === 'false' ? false : true)
-    }
-}
-
-exitConst_valREAL(ctx)
-{
-    ctx.typeObj = {
-        type: 'float',
-        value: toText(ctx)
-    }
-}
-
-exitConst_valHEX(ctx)
-{
-    ctx.typeObj = {
-        type: 'int',
-        value: toText(ctx)
-    }
-}
-
-exitConst_valSTRING(ctx)
-{
-    ctx.typeObj = {
-        type: 'string',
-        value: toText(ctx)
-    }
-}
-
-// #endregion
-
-// #region list
-
-enterList(ctx)
-{
-}
-
-exitList(ctx)
-{
-    let listType = ctx.getChild(1).typeObj.type;
-    // 2 steps because of COMMA in list, skip child(0) and cild(length-1) because of '[]'
-    for (let i = 2; i < ctx.children.length - 1; i += 2) {
-        let itemType = ctx.getChild(i).typeObj.type
-        if (listType != itemType) {
-            throw new TypeError(`type Error: expected ${listType} but found ${itemType} in ${/* TODO: error address */null}`)
-        }
-    }
-    ctx.typeObj = {
-        type: 'list',
-        value: toText(ctx),
-        innerType: 'int'
-    }
-}
-
-// #endregion
-
-exitType(ctx)
-{
-    ctx.typeObj = {
-        type: toText(ctx)
-    }
-}
-
-//#endregion declare
-
-// #region def
-
-enterExprExprMulDivMod(ctx)
-{
-
-}
-
-exitExprExprMulDivMod(ctx)
-{
-    let var1 = ctx.getChild(0);
-    let var2 = ctx.getChild(2);
-    // let op = ctx.getChild(1);
-    // let value;
-
-
-    //todo value
-    // if (var1.type === var2.type && (var1.type === 'int' || var1.type === 'float'))
-    //     switch (op) {
-    //         case '*':
-    //             return var1 * var2;
-    //         case '/':
-    //             return var1 / var2;
-    //         case '%':
-    //             return var1 % var2;
-    //
-    //
-    //     }
-}
-
-enterDcl(ctx)
-{
-    this.state = 'dcl';
-}
-
-exitDef(ctx)
-{/* skip */
-}
-
-enterType_def(ctx)
-{
-    this.state = "typedef";
-    let typeName = toText(ctx.getChild(1));
-    let typeScope = this.globalTable.getTypeInRoot(typeName);
-    let fatherScope = null;
-    if (ctx.COLON()) {
-        let fatherName = toText(ctx.getChild(3));
-        fatherScope = this.globalTable.getTypeInRoot(fatherName);
-        if (!fatherScope.isImplemented) {
-            ctx.addErrorNode(`class ${fatherName} not implemented.`);
-            console.error(ctx.children[ctx.children.length - 1].symbol);
-        }
-    }
-    typeScope.isImplemented = true;
-    typeScope.addParentScope(fatherScope);
-    ctx.table = typeScope;
-}
-
-exitType_def(ctx)
-{
-    this.state = "program";
-}
-
-enterComponent(ctx)
-{
-    ctx.table = ctx.parentCtx.table;
-}
-
-exitComponent(ctx)
-{
-}
-
-enterFun_def(ctx)
-{
-    let functionSymbol, functionTable;
-    if (this.state === 'typedef') {
-        let parentTable = ctx.parentCtx.table
-        // creation for function table, pointing to global table by parent scope
-        functionTable = new SymbolTable(toText(ctx.ID()), {
-            type: 'function',
-            defineValue: toText(ctx)
-        }, parentTable);
-
-        // creation for function symbol that is a way for access to function table, pointing to
-        // function table by child scope
-        functionSymbol = new Symbol(toText(ctx.ID()), {
-            type: 'function',
-            defineValue: toText(ctx)
-        }, parentTable.getNewOffset(), functionTable)
-
-        // add function symbol to type table
-        parentTable.addSymbol(functionSymbol, ctx)
-    } else {
-        let parentTable = this.globalTable;
-        functionTable = parentTable.getChildTable(toText(ctx.ID()));
-    }
-
-
-    ctx.table = functionTable;
-    this.state = 'fundef';
-}
-
-exitFun_def(ctx)
-{
-}
-
-enterBlock(ctx)
-{
-    if (this.state = 'fundef') {
-        ctx = ctx.parentCtx;
-        let returnableArgsTypes, mainArgsTypes = null;
-        if (ctx.ASSIGN()) {
-            returnableArgsTypes = ctx.getChild(1).typeObj;
-            mainArgsTypes = ctx.getChild(7).typeObj;
         } else {
-            returnableArgsTypes = [];
-            mainArgsTypes = ctx.getChild(3).typeObj;
-        }
-        if (mainArgsTypes == undefined) {
-            mainArgsTypes = [];
-        }
-        let functionTable = ctx.table;
-        //TODO: BUG: when place '.' instead of ',' it throw mainArgs is undefined!
+            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+        };
+        
+    }
 
-        // add return symbols to function table
-        returnableArgsTypes.forEach(typeObj => {
-            let argSymbol = new Symbol(typeObj.id, {
-                type: typeObj.type,
-                value: typeObj.value,
-                return: true
-            }, functionTable.getNewOffset(), null);
-            functionTable.addSymbol(argSymbol, ctx);
-        });
+    enterExprExprCaret(ctx) {
+    }
+    exitExprExprCaret(ctx) {
+        let op1 = ctx.getChild(0);
+        let operator = toText(ctx.getChild(1));
+        let op2 = ctx.getChild(2);
+        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx);
+        if (relopType(t3, 'int', ctx) === 'int') {
+            ctx.typeObj = {
+                type: 'bool',
+                value: toText(ctx)
+            }
+        } else {
+            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+        };
+    }
 
-        // add arguments symbols to function table
-        mainArgsTypes.forEach(typeObj => {
-            let argSymbol = new Symbol(typeObj.id, {
-                type: typeObj.type,
-                value: typeObj.value,
-                return: false
-            }, functionTable.getNewOffset(), null);
-            functionTable.addSymbol(argSymbol, ctx);
-        });
+    enterExprExprBitor(ctx) {
+    }
+    exitExprExprBitor(ctx) {
+        let op1 = ctx.getChild(0);
+        let operator = toText(ctx.getChild(1));
+        let op2 = ctx.getChild(2);
+        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx);
+        if (relopType(t3, 'int', ctx) === 'int') {
+            ctx.typeObj = {
+                type: 'bool',
+                value: toText(ctx)
+            }
+        } else {
+            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+        };
+    }
+
+    enterExprExprAnd(ctx) {
+    }
+    exitExprExprAnd(ctx) {
+        let op1 = ctx.getChild(0);
+        let operator = toText(ctx.getChild(1));
+        let op2 = ctx.getChild(2);
+        let t3 = relopType(op1.typeObj.type, 'bool', ctx);
+        let t4 = relopType(op2.typeObj.type, 'bool', ctx);
+        if (relopType(t3, t4, ctx) === 'bool') {
+            ctx.typeObj = {
+                type: 'bool',
+                value: toText(ctx)
+            }
+        } else {
+            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+        };        
+    }
+
+    enterExprExprOr(ctx) {
+    }
+    exitExprExprOr(ctx) {
+        let op1 = ctx.getChild(0);
+        let operator = toText(ctx.getChild(1));
+        let op2 = ctx.getChild(2);
+        let t3 = relopType(op1.typeObj.type, 'bool', ctx);
+        let t4 = relopType(op2.typeObj.type, 'bool', ctx);
+        if (relopType(t3, t4, ctx) === 'bool') {
+            ctx.typeObj = {
+                type: 'bool',
+                value: toText(ctx)
+            }
+        } else {
+            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+        }; 
+    }
+
+    enterExprParen(ctx) {
+    }
+    exitExprParen(ctx) {
+        let typeObj = null;
+        if (ctx.const_val()) {
+            typeObj = ctx.const_val().typeObj
+        } else if (ctx.list()) {
+            typeObj = ctx.list().typeObj
+        }
+        ctx.typeObj = typeObj;
+    }
+
+    // #endregion
+
+    // #region const_val
+
+    exitConst_valINT(ctx) {
+        ctx.typeObj = {
+            type: 'int',
+            value: toText(ctx)
+        }
+    }
+
+    exitConst_valBOOL(ctx) {
+        ctx.typeObj = {
+            type: 'bool',
+            value: (toText(ctx) === 'false' ? false : true)
+        }
+    }
+
+    exitConst_valREAL(ctx) {
+        ctx.typeObj = {
+            type: 'float',
+            value: toText(ctx)
+        }
+    }
+
+    exitConst_valHEX(ctx) {
+        ctx.typeObj = {
+            type: 'int',
+            value: toText(ctx)
+        }
+    }
+
+    exitConst_valSTRING(ctx) {
+        ctx.typeObj = {
+            type: 'string',
+            value: toText(ctx)
+        }
+    }
+
+    // #endregion
+
+    // #region list
+
+    enterList(ctx) {
+    }
+
+    exitList(ctx) {
+        let listType = ctx.getChild(1).typeObj.type;
+        // 2 steps because of COMMA in list, skip child(0) and cild(length-1) because of '[]'
+        for (let i = 2; i < ctx.children.length - 1; i += 2) {
+            let itemType = ctx.getChild(i).typeObj.type
+            if (listType != itemType) {
+                throw new TypeError(`type Error: expected ${listType} but found ${itemType} in ${/* TODO: error address */null}`)
+            }
+        }
+        ctx.typeObj = {
+            type: 'list',
+            value: toText(ctx),
+            innerType: 'int'
+        }
+    }
+
+    // #endregion
+
+    exitType(ctx) {
+        ctx.typeObj = {
+            type: toText(ctx)
+        }
+    }
+
+    //#endregion declare
+
+    // #region def
+
+    enterExprExprMulDivMod(ctx) {
 
     }
 
-}
+    exitExprExprMulDivMod(ctx) {
+        let var1 = ctx.getChild(0);
+        let var2 = ctx.getChild(2);
+        // let op = ctx.getChild(1);
+        // let value;
 
-// #region funcs and stmts
 
-// #endregion
+        //todo value
+        // if (var1.type === var2.type && (var1.type === 'int' || var1.type === 'float'))
+        //     switch (op) {
+        //         case '*':
+        //             return var1 * var2;
+        //         case '/':
+        //             return var1 / var2;
+        //         case '%':
+        //             return var1 % var2;
+        //
+        //
+        //     }
+    }
 
-// #endregion def
+    enterDcl(ctx) {
+        this.state = 'dcl';
+    }
 
-// #endregion
+    exitDef(ctx) {/* skip */
+    }
+
+    enterType_def(ctx) {
+        this.state = "typedef";
+        let typeName = toText(ctx.getChild(1));
+        let typeScope = this.globalTable.getTypeInRoot(typeName);
+        let fatherScope = null;
+        if (ctx.COLON()) {
+            let fatherName = toText(ctx.getChild(3));
+            fatherScope = this.globalTable.getTypeInRoot(fatherName);
+            if (!fatherScope.isImplemented) {
+                ctx.addErrorNode(`class ${fatherName} not implemented.`);
+                console.error(ctx.children[ctx.children.length - 1].symbol);
+            }
+        }
+        typeScope.isImplemented = true;
+        typeScope.addParentScope(fatherScope);
+        ctx.table = typeScope;
+    }
+
+    exitType_def(ctx) {
+        this.state = "program";
+    }
+
+    enterComponent(ctx) {
+        ctx.table = ctx.parentCtx.table;
+    }
+
+    exitComponent(ctx) {
+    }
+
+    enterFun_def(ctx) {
+        let functionSymbol, functionTable;
+        if (this.state === 'typedef') {
+            let parentTable = ctx.parentCtx.table
+            // creation for function table, pointing to global table by parent scope
+            functionTable = new SymbolTable(toText(ctx.ID()), {
+                type: 'function',
+                defineValue: toText(ctx)
+            }, parentTable);
+
+            // creation for function symbol that is a way for access to function table, pointing to
+            // function table by child scope
+            functionSymbol = new Symbol(toText(ctx.ID()), {
+                type: 'function',
+                defineValue: toText(ctx)
+            }, parentTable.getNewOffset(), functionTable)
+
+            // add function symbol to type table
+            parentTable.addSymbol(functionSymbol, ctx)
+        } else {
+            let parentTable = this.globalTable;
+            functionTable = parentTable.getChildTable(toText(ctx.ID()));
+        }
+
+
+        ctx.table = functionTable;
+        this.state = 'fundef';
+    }
+
+    exitFun_def(ctx) {
+    }
+
+    enterBlock(ctx) {
+        if (this.state = 'fundef') {
+            ctx = ctx.parentCtx;
+            let returnableArgsTypes, mainArgsTypes = null;
+            if (ctx.ASSIGN()) {
+                returnableArgsTypes = ctx.getChild(1).typeObj;
+                mainArgsTypes = ctx.getChild(7).typeObj;
+            } else {
+                returnableArgsTypes = [];
+                mainArgsTypes = ctx.getChild(3).typeObj;
+            }
+            if (mainArgsTypes == undefined) {
+                mainArgsTypes = [];
+            }
+            let functionTable = ctx.table;
+            //TODO: BUG: when place '.' instead of ',' it throw mainArgs is undefined!
+
+            // add return symbols to function table
+            returnableArgsTypes.forEach(typeObj => {
+                let argSymbol = new Symbol(typeObj.id, {
+                    type: typeObj.type,
+                    value: typeObj.value,
+                    return: true
+                }, functionTable.getNewOffset(), null);
+                functionTable.addSymbol(argSymbol, ctx);
+            });
+
+            // add arguments symbols to function table
+            mainArgsTypes.forEach(typeObj => {
+                let argSymbol = new Symbol(typeObj.id, {
+                    type: typeObj.type,
+                    value: typeObj.value,
+                    return: false
+                }, functionTable.getNewOffset(), null);
+                functionTable.addSymbol(argSymbol, ctx);
+            });
+
+        }
+
+    }
+
+    // #region funcs and stmts
+
+    // #endregion
+
+    // #endregion def
+
+    // #endregion
 }
 
 module.exports = Listener;

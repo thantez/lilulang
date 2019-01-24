@@ -66,6 +66,9 @@ typings/
 # visual studio code configs
 .vscode
 
+#intelij configs
+.idea
+
 # test program
 .test*
 

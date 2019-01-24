@@ -22,7 +22,6 @@
   "homepage": "https://github.com/thantez/lilulang#readme",
   "dependencies": {
     "antlr4": "^4.7.2",
-    "json-stringify-safe": "^5.0.1",
-    "pretty-print-json": "0.0.5"
+    "json-stringify-safe": "^5.0.1"
   }
 }

@@ -3,6 +3,13 @@
    "semantic": {
      "OperandTypeMismatch": {
        "message": "operands type mismatch"
-     }
+     },
+     "FatherTypeimplementation":{
+       "message": "father type is not implemented"
+     },
+     "Scope":{
+       "message": "break/continue must be used inside loop"
+     },
+     "Destruct": "destruct can be used with types"
    }
  }

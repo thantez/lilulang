@@ -6,7 +6,10 @@ const json = require('json-stringify-safe')
 const path = require('path');
 
 const {
-  SemanticOperandTypeMismatchError
+  SemanticOperandTypeMismatchError,
+  SemanticFatherTypeimplementationError,
+  SemanticScopeError,
+  SemanticDestructError
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 
@@ -91,7 +94,7 @@ function relopType(t1, t2, ctx, stateStack) {
                 return t1;
 
         }
-    let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, stateStack, `expected ${t1} but found ${t2}`))
+    let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, stateStack, `expected ${t1} but found ${t2}`));
     errors.push(e);
     // throw e;
     return 'error'
@@ -285,7 +288,7 @@ class Listener extends listener {
             vrType.preType = preType;
             if (vrType) {
                 if (vrType.type !== type) {
-                  let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, stateStack, `expected ${type} but found ${vrType}`))
+                  let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${type} but found ${vrType.type}`))
                   errors.push(e);
                 }
                 typeObj = vrType;
@@ -424,10 +427,9 @@ class Listener extends listener {
                 value: toText(ctx)
             }
         } else {
-            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+          let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected int but found ${t3}`))
+          errors.push(e);
         }
-        ;
-
     }
 
     enterExprExprCaret(ctx) {
@@ -444,9 +446,9 @@ class Listener extends listener {
                 value: toText(ctx)
             }
         } else {
-            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+          let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected int but found ${t3}`))
+          errors.push(e);
         }
-        ;
     }
 
     enterExprExprBitor(ctx) {
@@ -463,9 +465,9 @@ class Listener extends listener {
                 value: toText(ctx)
             }
         } else {
-            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+          let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected int but found ${t3}`))
+          errors.push(e);
         }
-        ;
     }
 
     enterExprExprAnd(ctx) {
@@ -485,7 +487,6 @@ class Listener extends listener {
         } else {
             throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
         }
-        ;
     }
 
     enterExprExprOr(ctx) {
@@ -503,7 +504,8 @@ class Listener extends listener {
                 value: toText(ctx)
             }
         } else {
-            throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
+          let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected int but found ${t3}`))
+          errors.push(e);
         }
     }
 
@@ -573,7 +575,8 @@ class Listener extends listener {
         for (let i = 2; i < ctx.children.length - 1; i += 2) {
             let itemType = ctx.getChild(i).typeObj.type
             if (listType !== itemType) {
-                throw new TypeError(`type Error: expected ${listType} but found ${itemType} in ${/* TODO: error address */null}`)
+              let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${listType} but found ${itemType}`))
+              errors.push(e);
             }
         }
         ctx.typeObj = {
@@ -599,27 +602,6 @@ class Listener extends listener {
 
     }
 
-    exitExprExprMulDivMod(ctx) {
-        let var1 = ctx.getChild(0);
-        let var2 = ctx.getChild(2);
-        // let op = ctx.getChild(1);
-        // let value;
-
-
-        //todo value
-        // if (var1.type === var2.type && (var1.type === 'int' || var1.type === 'float'))
-        //     switch (op) {
-        //         case '*':
-        //             return var1 * var2;
-        //         case '/':
-        //             return var1 / var2;
-        //         case '%':
-        //             return var1 % var2;
-        //
-        //
-        //     }
-    }
-
     enterDcl(ctx) {
         this.state.push(cursorCreator('dcl', ctx));
     }
@@ -643,8 +625,8 @@ class Listener extends listener {
             let fatherName = toText(ctx.getChild(3));
             fatherScope = this.globalTable.getTypeInRoot(fatherName);
             if (!fatherScope.isImplemented) {
-                ctx.addErrorNode(`class ${fatherName} not implemented.`);
-                console.error(ctx.children[ctx.children.length - 1].symbol);
+              let e = new SemanticFatherTypeimplementationError(payloadCreator(ctx, this.state, `class ${fatherName} not implemented.`))
+              errors.push(e);
             }
         }
         typeScope.isImplemented = true;
@@ -792,21 +774,23 @@ class Listener extends listener {
     }
 
     exitStmtBREAK(ctx) {
-        if (this.state.top().name !== 'loop') {
-            throw new ScopeError(`scope Error: break must be used inside loop`)
+        if (this.state.top().name !== 'forloop' || this.state.top().name !== 'whileloop') {
+            let e = new SemanticScopeError(payloadCreator(ctx, this.state,`break must be used inside loop`))
+            errors.push(e);
         }
     }
 
     exitStmtCONTINUE(ctx) {
-        if (this.state.top().name !== 'loop') {
-            throw new ScopeError(`scope Error: continue must be used inside loop`)
+        if (this.state.top().name !== 'forloop' || this.state.top().name !== 'whileloop') {
+          let e = new SemanticScopeError(payloadCreator(ctx, this.state,`continue must be used inside loop`))
+          errors.push(e);
         }
     }
 
     exitStmtDESTRUCT(ctx) {
         let type = ctx.ID.typeObj.type;
         if (type.typeObj.type !== 'userType')
-            throw new typeError(`type Error: destruct can be used with userTypes`);
+            throw new SemanticDestructError(payloadCreator(ctx, this.state,`destruct can be used with userTypes`));
         //todo array
         // else if (type === 'array')
         // if ((ctx.children.length - 3) / 2 !== arrayDimension)

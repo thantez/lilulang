@@ -2,7 +2,7 @@ declare {
     start();
     myType;
     fatherType;
-    int a;
+    float a = 2 + 2.3;
 }
 
 type fatherType{

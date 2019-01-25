@@ -2,7 +2,7 @@ declare {
     start();
     myType;
     fatherType;
-    float a = 3;
+    int a = 3;
 }
 %~
 type fatherType{
@@ -16,4 +16,6 @@ type myType : fatherType{
 }
 
 ~%
-function start() {}
+function start() {
+    a = 3;
+}

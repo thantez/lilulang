@@ -54,6 +54,14 @@ function widen(a, t, w) {
         return max(t, w);
 }
 
+// float x = 1;
+// float, int
+function assignTypeCheck(left, right, ctx) {
+    let exprType = relopType(left, right, ctx);
+    if (exprType !== left)
+        throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`)
+}
+
 // #endregion
 class Listener extends listener {
     constructor() {
@@ -677,8 +685,11 @@ class Listener extends listener {
     }
 
     exitAssign(ctx) {
+        // console.log(ctx.getChild(1));
+        console.log(toText(ctx.variable().id));
         if (ctx.children.length === 3) {
-            relopType(ctx.variable().typeObj.type, ctx.expr().typeObj.type, ctx);
+
+            assignTypeCheck(ctx.variable().typeObj.type, ctx.expr().typeObj.type, ctx);
         }
         // else {
         //

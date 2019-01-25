@@ -10,6 +10,11 @@
      "Scope":{
        "message": "break/continue must be used inside loop"
      },
-     "Destruct": "destruct can be used with types"
+     "Destruct": {
+       "message": "destruct can be used with types"
+     },
+     "TypeDeclared":{
+      "message": "identifier has already been declared before"
+     }
    }
  }

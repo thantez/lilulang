@@ -9,7 +9,8 @@ const {
   SemanticOperandTypeMismatchError,
   SemanticFatherTypeimplementationError,
   SemanticScopeError,
-  SemanticDestructError
+  SemanticDestructError,
+  SemanticTypeDeclaredError
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 
@@ -170,7 +171,11 @@ class Listener extends listener {
         if (this.state.top().name === 'declare') {
             let typeTable = new SymbolTable(id, {type: id}, null)
             let typeSymbol = new Symbol(id, typeObj, this.globalTable.getNewOffset(), typeTable);
-            this.globalTable.addSymbol(typeSymbol, ctx);
+            let result = this.globalTable.addSymbol(typeSymbol, ctx);
+            if(result === 'error'){
+              let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+              errors.push(e);
+            }
         }
     }
 
@@ -215,7 +220,11 @@ class Listener extends listener {
         }, this.globalTable.getNewOffset(), functionTable)
 
         // add function symbol to global table
-        this.globalTable.addSymbol(functionSymbol, ctx)
+        let result = this.globalTable.addSymbol(functionSymbol, ctx);
+        if(result === 'error'){
+          let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+          errors.push(e);
+        }
 
         // add return symbols to function table
         returnableArgsTypes.forEach(typeObj => {
@@ -224,7 +233,11 @@ class Listener extends listener {
                 value: typeObj.value,
                 return: true
             }, functionTable.getNewOffset(), null);
-            functionTable.addSymbol(argSymbol, ctx);
+            let result =  functionTable.addSymbol(argSymbol, ctx);
+            if(result === 'error'){
+              let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+              errors.push(e);
+            }
         });
 
         // add arguments symbols to function table
@@ -234,7 +247,11 @@ class Listener extends listener {
                 value: typeObj.value,
                 return: false
             }, functionTable.getNewOffset(), null);
-            functionTable.addSymbol(argSymbol, ctx);
+            let result = functionTable.addSymbol(argSymbol, ctx);
+            if(result === 'error'){
+              let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+              errors.push(e);
+            }
         });
 
     }
@@ -299,7 +316,11 @@ class Listener extends listener {
                 }
             }
             let vrSymbol = new Symbol(id, typeObj, table.getNewOffset(), null);
-            table.addSymbol(vrSymbol, ctx);
+            let result = table.addSymbol(vrSymbol, ctx);
+            if(result === 'error'){
+              let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+              errors.push(e);
+            }
         });
 
         //if()
@@ -662,7 +683,11 @@ class Listener extends listener {
             }, parentTable.getNewOffset(), functionTable)
 
             // add function symbol to type table
-            parentTable.addSymbol(functionSymbol, ctx)
+            let result = parentTable.addSymbol(functionSymbol, ctx);
+            if(result === 'error'){
+              let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+              errors.push(e);
+            }
         } else {
             let parentTable = this.globalTable;
             functionTable = parentTable.getChildTable(toText(ctx.ID()));
@@ -701,7 +726,11 @@ class Listener extends listener {
                     value: typeObj.value,
                     return: true
                 }, functionTable.getNewOffset(), null);
-                functionTable.addSymbol(argSymbol, ctx);
+                let result = functionTable.addSymbol(argSymbol, ctx);
+                if(result === 'error'){
+                  let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+                  errors.push(e);
+                }
             });
 
             // add arguments symbols to function table
@@ -711,7 +740,11 @@ class Listener extends listener {
                     value: typeObj.value,
                     return: false
                 }, functionTable.getNewOffset(), null);
-                functionTable.addSymbol(argSymbol, ctx);
+                let result = functionTable.addSymbol(argSymbol, ctx);
+                if(result === 'error'){
+                  let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
+                  errors.push(e);
+                }
             });
 
         }

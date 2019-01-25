@@ -22,6 +22,8 @@
   "homepage": "https://github.com/thantez/lilulang#readme",
   "dependencies": {
     "antlr4": "^4.7.2",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
     "json-stringify-safe": "^5.0.1"
   }
 }

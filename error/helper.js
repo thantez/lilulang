@@ -27,10 +27,7 @@ Object.keys(config).forEach((group) => {
                this.symbol = payload.text || '';
                this.message = payload.message || message;
                this.payload = payload;
-               this.stack = payload.stack? payload.stack: this.stack;
             }
-
-
          }
       };
    });

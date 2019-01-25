@@ -5,12 +5,22 @@ const Listener = require('./Listener')
 const fs = require('fs')
 const config = require('./.config.json')
 const input = fs.readFileSync(`${config.testDir}/${config.testFile}.${config.fileType}`,{encoding: 'utf8'})
+const ErrorListener = require('./ErrorListener');
 
-const chars = new antlr4.InputStream(input)
-const lexer = new liluLexer.lilu_grammarLexer(chars)
-const tokens = new antlr4.CommonTokenStream(lexer)
-const parser = new liluParser.lilu_grammarParser(tokens)
+let chars = new antlr4.InputStream(input)
+let lexer = new liluLexer.lilu_grammarLexer(chars)
+let tokens = new antlr4.CommonTokenStream(lexer)
+let parser = new liluParser.lilu_grammarParser(tokens)
+let errorListener = new ErrorListener();
 
-let tree = parser.program();   
-let listener = new Listener();
-antlr4.tree.ParseTreeWalker.DEFAULT.walk(listener, tree);
+parser.removeErrorListeners(); // Remove default ConsoleErrorListener
+parser.addErrorListener(errorListener); // Add custom error listener
+
+try{
+   let listener = new Listener();
+   let tree = parser.program();
+   antlr4.tree.ParseTreeWalker.DEFAULT.walk(listener, tree);
+}
+catch (e){
+   console.error(e)
+}

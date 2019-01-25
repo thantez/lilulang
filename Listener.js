@@ -94,6 +94,7 @@ function relopType(t1, t2, ctx, stateStack) {
     let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, stateStack, `expected ${t1} but found ${t2}`))
     errors.push(e);
     // throw e;
+    return 'error'
   } else {
     throw new Error(`t1: ${t1}, t2: ${t2}; found undefined or null`);
   }
@@ -284,7 +285,8 @@ class Listener extends listener {
             vrType.preType = preType;
             if (vrType) {
                 if (vrType.type !== type) {
-                    throw new Error(`type Error: expected ${type} but found ${vrType.type} in ${/* TODO: error address */null}`)
+                  let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, stateStack, `expected ${type} but found ${vrType}`))
+                  errors.push(e);
                 }
                 typeObj = vrType;
             } else {

@@ -14,7 +14,7 @@ class SymbolTable {
       if(symbol.id && symbol.id === s.id){
         throw new TypeError(`syntax Error: Identifier ${symbol.id} has already been declared in Line: ${ctx.start.line}, Column: ${ctx.start.column}`)
       }
-    })
+    });
     this.symbols.push(symbol);
     this.size = this.size + symbol.getWidth();
   }
@@ -45,7 +45,7 @@ class SymbolTable {
 
   getChildTable(id){
     for (let symbol of this.symbols) {
-      let subScopeTable = symbol.getChildScope()
+      let subScopeTable = symbol.getChildScope();
       if(subScopeTable){
         if(subScopeTable.id === id){
           return subScopeTable;

@@ -17,7 +17,8 @@ function toText(ctx) {
 //fixme chain cast?
 function relopType(t1, t2, ctx) {
     //go up to find lub
-    if (t1 === t2) return t1;
+    if (t1 === t2)
+        return t1;
     else
         switch (t1) {
             case 'int':
@@ -25,8 +26,8 @@ function relopType(t1, t2, ctx) {
                     return 'float';
                 else if (t2 === 'bool')
                     return 'int';
-                else if (t2 === 'string')
-                    return 'string';
+                // else if (t2 === 'string')
+                //     return 'string';
                 break;
 
             case 'float':
@@ -42,9 +43,9 @@ function relopType(t1, t2, ctx) {
                 break;
             case 'bool':
                 return t1;
-            
+
         }
-        throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`)
+    throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`)
 }
 
 function widen(a, t, w) {
@@ -59,14 +60,14 @@ class Listener extends listener {
         super();
         //global symbol table
         this.globalTable = null;
-        this.state = '';
+        this.state = [];
     }
 
 
     enterProgram(ctx) {
         //define global table
         this.globalTable = new SymbolTable('program', 'root', null);
-        this.state = 'Program';
+        this.state.push('program');
     }
 
     exitProgram(ctx) {
@@ -74,7 +75,7 @@ class Listener extends listener {
         //TODO: check start function is in program or not
         //TODO: symbol table of classes and etc ...
         fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
-        this.state = '';
+        this.state.pop();
     }
 
     // #region program
@@ -83,12 +84,12 @@ class Listener extends listener {
 
     // skip dcl grammar
     enterFt_dcl(ctx) {
-        this.state = 'declare';
+        this.state.push('declare');
         ctx.table = this.globalTable;
     }
 
     exitFt_dcl(ctx) {
-        this.state = 'program';
+        this.state.pop();
     }
 
     enterType_dcl(ctx) {
@@ -98,8 +99,8 @@ class Listener extends listener {
             type: 'userType',
             value: id
         };
-        if (this.state === 'declare') {
-            let typeTable = new SymbolTable(id, { type: id }, null)
+        if (this.state.top === 'declare') {
+            let typeTable = new SymbolTable(id, {type: id}, null)
             let typeSymbol = new Symbol(id, typeObj, this.globalTable.getNewOffset(), typeTable);
             this.globalTable.addSymbol(typeSymbol, ctx);
         }
@@ -255,6 +256,7 @@ class Listener extends listener {
     enterRef(ctx) {
 
     }
+
     exitRef(ctx) {
 
     }
@@ -263,23 +265,25 @@ class Listener extends listener {
 
     enterExprUnary_op(ctx) {
     }
+
     exitExprUnary_op(ctx) {
         let op = ctx.getChild(1);
         let operator = ctx.getChild(0);
 
-        switch(toText(operator)) {
-            case '-': 
+        switch (toText(operator)) {
+            case '-':
                 return {type: op.typeObj.type}
             case '!':
-                return {type: (relopType(op.typeObj.type, 'bool', ctx)? 'bool': '' )};
+                return {type: (relopType(op.typeObj.type, 'bool', ctx) ? 'bool' : '')};
             case '~':
-                return {type: (relopType(op.typeObj.type, 'int', ctx)? 'int': '')};
+                return {type: (relopType(op.typeObj.type, 'int', ctx) ? 'int' : '')};
 
         }
     }
 
     enterExprExprMulDivMod(ctx) {
     }
+
     exitExprExprMulDivMod(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -289,12 +293,13 @@ class Listener extends listener {
             type: relopType(op1.typeObj.type, op2.typeObj.type, ctx),
             value: toText(ctx)
         }
-        
+
         //TODO: find value
     }
 
     enterExprExprAddSub(ctx) {
     }
+
     exitExprExprAddSub(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -304,12 +309,13 @@ class Listener extends listener {
             type: relopType(op1.typeObj.type, op2.typeObj.type, ctx),
             value: toText(ctx)
         }
-        
+
         //TODO: find value
     }
 
     enterExprExprLtGt(ctx) {
     }
+
     exitExprExprLtGt(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -319,13 +325,14 @@ class Listener extends listener {
             type: 'bool',
             value: toText(ctx)
         }
-        
+
         //TODO: find value
 
     }
 
     enterExprExprEqualNotequalLeGe(ctx) {
     }
+
     exitExprExprEqualNotequalLeGe(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -339,6 +346,7 @@ class Listener extends listener {
 
     enterExprExprBitand(ctx) {
     }
+
     exitExprExprBitand(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -351,12 +359,14 @@ class Listener extends listener {
             }
         } else {
             throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
-        };
-        
+        }
+        ;
+
     }
 
     enterExprExprCaret(ctx) {
     }
+
     exitExprExprCaret(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -369,11 +379,13 @@ class Listener extends listener {
             }
         } else {
             throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
-        };
+        }
+        ;
     }
 
     enterExprExprBitor(ctx) {
     }
+
     exitExprExprBitor(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -386,11 +398,13 @@ class Listener extends listener {
             }
         } else {
             throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
-        };
+        }
+        ;
     }
 
     enterExprExprAnd(ctx) {
     }
+
     exitExprExprAnd(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -404,11 +418,13 @@ class Listener extends listener {
             }
         } else {
             throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
-        };        
+        }
+        ;
     }
 
     enterExprExprOr(ctx) {
     }
+
     exitExprExprOr(ctx) {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
@@ -422,11 +438,12 @@ class Listener extends listener {
             }
         } else {
             throw new Error(`type Error: expected int but found ${t3} in ${/* TODO: error address */null}`);
-        }; 
+        }
     }
 
     enterExprParen(ctx) {
     }
+
     exitExprParen(ctx) {
         let typeObj = null;
         if (ctx.const_val()) {
@@ -538,14 +555,15 @@ class Listener extends listener {
     }
 
     enterDcl(ctx) {
-        this.state = 'dcl';
+        this.state.push('dcl');
     }
 
     exitDef(ctx) {/* skip */
+        this.state.pop();
     }
 
     enterType_def(ctx) {
-        this.state = "typedef";
+        this.state.push('typedef');
         let typeName = toText(ctx.getChild(1));
         let typeScope = this.globalTable.getTypeInRoot(typeName);
         let fatherScope = null;
@@ -563,7 +581,7 @@ class Listener extends listener {
     }
 
     exitType_def(ctx) {
-        this.state = "program";
+        this.state.pop();
     }
 
     enterComponent(ctx) {
@@ -599,14 +617,15 @@ class Listener extends listener {
 
 
         ctx.table = functionTable;
-        this.state = 'fundef';
+        this.state.push('fundef');
     }
 
     exitFun_def(ctx) {
+        this.state.pop();
     }
 
     enterBlock(ctx) {
-        if (this.state === 'fundef') {
+        if (this.state.top === 'fundef') {
             ctx = ctx.parentCtx;
             let returnableArgsTypes, mainArgsTypes = null;
             if (ctx.ASSIGN()) {
@@ -646,9 +665,35 @@ class Listener extends listener {
 
     }
 
+    enterStmtAssign(ctx) {
+        this.state.push('stmt');
+    }
+
+    exitStmtAssign(ctx) {
+        this.state.pop();
+    }
+
+    enterAssign(ctx) {
+    }
+
+    exitAssign(ctx) {
+        if (ctx.children.length === 3) {
+            relopType(ctx.variable().typeObj.type, ctx.expr().typeObj.type, ctx);
+        }
+        // else {
+        //
+        // }
+    }
+
+    enterCond_stmtIF(ctx) {
+    }
+
     exitCond_stmtIF(ctx) {
         let valueType = ctx.expr().typeObj.type;
         relopType(valueType, 'bool', ctx);
+    }
+
+    enterCond_stmtSWITCH(ctx) {
     }
 
     exitCond_stmtSWITCH(ctx) {
@@ -657,29 +702,33 @@ class Listener extends listener {
     }
 
     enterLoop_stmtFOR(ctx) {
-        this.state = 'loop';
+        this.state.push('loop');
     }
+
     exitLoop_stmtFOR(ctx) {
         let valueType = ctx.expr().typeObj.type;
         relopType(valueType, 'bool', ctx);
+        this.state.pop();
     }
 
     enterLoop_stmtWHILE(ctx) {
-        this.state = 'loop';
+        this.state.push('loop');
     }
+
     exitLoop_stmtWHILE(ctx) {
         let valueType = ctx.expr().typeObj.type;
         relopType(valueType, 'bool', ctx);
+        this.state.pop();
     }
 
     exitStmtBREAK(ctx) {
-        if (this.state !== 'loop') {
+        if (this.state.top !== 'loop') {
             throw new ScopeError(`scope Error: break must be used inside loop`)
         }
     }
 
     exitStmtCONTINUE(ctx) {
-        if (this.state !== 'loop') {
+        if (this.state.top !== 'loop') {
             throw new ScopeError(`scope Error: continue must be used inside loop`)
         }
     }
@@ -695,8 +744,7 @@ class Listener extends listener {
     }
 
 
-
-        // #region funcs and stmts
+    // #region funcs and stmts
 
     // #endregion
 

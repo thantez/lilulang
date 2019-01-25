@@ -137,7 +137,11 @@ def: ft_def+;
 
 //assignment
 
-assign: (variable | LPAREN variable ( COMMA variable)* RPAREN) ASSIGN expr;
+assign: (
+        variable
+        | LPAREN variable ( COMMA variable)* RPAREN
+        )
+        ASSIGN expr;
 
 unary_op: SUB
         | BANG

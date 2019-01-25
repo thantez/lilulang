@@ -3,6 +3,20 @@ const fs = require('fs');
 const SymbolTable = require('./SymbolTable').symbolTable;
 const Symbol = require('./SymbolTable').symbol;
 const json = require('json-stringify-safe')
+const path = require('path');
+
+const {
+  SemanticOperandTypeMismatchError
+} = require(path.resolve('error', 'helper'));
+const errors = [];
+
+// #region code
+if (!Array.prototype.top){
+  Array.prototype.top = function(){
+      return this[this.length - 1];
+  };
+};
+// #endregion
 
 // #region functions
 
@@ -14,8 +28,40 @@ function toText(ctx) {
     return null
 }
 
+function start(ctx) {
+  return {
+    start: ctx.start.start,
+    stop: ctx.start.stop,
+    line: ctx.start.line,
+    column: ctx.start.column
+  }
+}
+
+function stop(ctx){
+  return {
+    start: ctx.stop.start,
+    stop: ctx.stop.stop,
+    line: ctx.stop.line,
+    column: ctx.stop.column
+  }
+}
+
+function payloadCreator(ctx, stack, message) {
+  let obj = {
+    message,
+    stack: []
+  }
+
+  for(let state of stack){
+    obj.stack.push(`at ${state.name} ((line: ${state.cursor.start.line},column: ${state.cursor.start.column}) - (line: ${state.cursor.stop.line},column: ${state.cursor.stop.column}))`);
+  }
+  obj.stack.push(`at ${toText(ctx)} ((line: ${start(ctx).line},column: ${start(ctx).column}) - (line: ${stop(ctx).line},column: ${stop(ctx).column}))`)
+  return obj
+}
+
 //fixme chain cast?
-function relopType(t1, t2, ctx) {
+function relopType(t1, t2, ctx, stateStack) {
+  if(t1 && t2){
     //go up to find lub
     if (t1 === t2)
         return t1;
@@ -45,7 +91,19 @@ function relopType(t1, t2, ctx) {
                 return t1;
 
         }
-    throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`)
+    let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, stateStack, `expected ${t1} but found ${t2}`))
+    errors.push(e);
+    // throw e;
+  } else {
+    throw new Error(`t1: ${t1}, t2: ${t2}; found undefined or null`);
+  }
+}
+
+function cursorCreator(name, ctx){
+  return {name, cursor: {
+    start: start(ctx),
+    stop: stop(ctx)
+  }}
 }
 
 function widen(a, t, w) {
@@ -56,26 +114,32 @@ function widen(a, t, w) {
 
 // #endregion
 class Listener extends listener {
-    constructor() {
+    constructor(address) {
         super();
         //global symbol table
         this.globalTable = null;
         this.state = [];
+        this.address = address;
     }
 
 
     enterProgram(ctx) {
         //define global table
         this.globalTable = new SymbolTable('program', 'root', null);
-        this.state.push('program');
+        this.state.push(cursorCreator('program', ctx));
     }
 
     exitProgram(ctx) {
+        this.state.pop();
         //DONE: globalTable size
         //TODO: check start function is in program or not
         //TODO: symbol table of classes and etc ...
-        fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
-        this.state.pop();
+        if(errors.length != 0){
+          fs.writeFileSync('.temp/symbolTable_output.json', json(errors, null, 2), 'utf-8');
+        } else {
+          fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
+        }
+        
     }
 
     // #region program
@@ -84,7 +148,7 @@ class Listener extends listener {
 
     // skip dcl grammar
     enterFt_dcl(ctx) {
-        this.state.push('declare');
+        this.state.push(cursorCreator('declare', ctx));
         ctx.table = this.globalTable;
     }
 
@@ -99,7 +163,7 @@ class Listener extends listener {
             type: 'userType',
             value: id
         };
-        if (this.state.top === 'declare') {
+        if (this.state.top().name === 'declare') {
             let typeTable = new SymbolTable(id, {type: id}, null)
             let typeSymbol = new Symbol(id, typeObj, this.globalTable.getNewOffset(), typeTable);
             this.globalTable.addSymbol(typeSymbol, ctx);
@@ -274,9 +338,9 @@ class Listener extends listener {
             case '-':
                 return {type: op.typeObj.type}
             case '!':
-                return {type: (relopType(op.typeObj.type, 'bool', ctx) ? 'bool' : '')};
+                return {type: (relopType(op.typeObj.type, 'bool', ctx, this.state) ? 'bool' : '')};
             case '~':
-                return {type: (relopType(op.typeObj.type, 'int', ctx) ? 'int' : '')};
+                return {type: (relopType(op.typeObj.type, 'int', ctx, this.state) ? 'int' : '')};
 
         }
     }
@@ -290,7 +354,7 @@ class Listener extends listener {
         let op2 = ctx.getChild(2);
 
         ctx.typeObj = {
-            type: relopType(op1.typeObj.type, op2.typeObj.type, ctx),
+            type: relopType(op1.typeObj.type, op2.typeObj.type, ctx, this.state),
             value: toText(ctx)
         }
 
@@ -306,7 +370,7 @@ class Listener extends listener {
         let op2 = ctx.getChild(2);
 
         ctx.typeObj = {
-            type: relopType(op1.typeObj.type, op2.typeObj.type, ctx),
+            type: relopType(op1.typeObj.type, op2.typeObj.type, ctx, this.state),
             value: toText(ctx)
         }
 
@@ -320,7 +384,7 @@ class Listener extends listener {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-        relopType(op1.typeObj.type, op2.typeObj.type, ctx);
+        relopType(op1.typeObj.type, op2.typeObj.type, ctx, this.state);
         ctx.typeObj = {
             type: 'bool',
             value: toText(ctx)
@@ -337,7 +401,7 @@ class Listener extends listener {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-        relopType(op1.typeObj.type, op2.typeObj.type, ctx);
+        relopType(op1.typeObj.type, op2.typeObj.type, ctx, this.state);
         ctx.typeObj = {
             type: 'bool',
             value: toText(ctx)
@@ -351,8 +415,8 @@ class Listener extends listener {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx);
-        if (relopType(t3, 'int', ctx) === 'int') {
+        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx, this.state);
+        if (relopType(t3, 'int', ctx, this.state) === 'int') {
             ctx.typeObj = {
                 type: 'bool',
                 value: toText(ctx)
@@ -371,8 +435,8 @@ class Listener extends listener {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx);
-        if (relopType(t3, 'int', ctx) === 'int') {
+        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx, this.state);
+        if (relopType(t3, 'int', ctx, this.state) === 'int') {
             ctx.typeObj = {
                 type: 'bool',
                 value: toText(ctx)
@@ -390,8 +454,8 @@ class Listener extends listener {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx);
-        if (relopType(t3, 'int', ctx) === 'int') {
+        let t3 = relopType(op1.typeObj.type, op2.typeObj.type, ctx, this.state);
+        if (relopType(t3, 'int', ctx, this.state) === 'int') {
             ctx.typeObj = {
                 type: 'bool',
                 value: toText(ctx)
@@ -409,9 +473,9 @@ class Listener extends listener {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-        let t3 = relopType(op1.typeObj.type, 'bool', ctx);
-        let t4 = relopType(op2.typeObj.type, 'bool', ctx);
-        if (relopType(t3, t4, ctx) === 'bool') {
+        let t3 = relopType(op1.typeObj.type, 'bool', ctx, this.state);
+        let t4 = relopType(op2.typeObj.type, 'bool', ctx, this.state);
+        if (relopType(t3, t4, ctx, this.state) === 'bool') {
             ctx.typeObj = {
                 type: 'bool',
                 value: toText(ctx)
@@ -429,9 +493,9 @@ class Listener extends listener {
         let op1 = ctx.getChild(0);
         let operator = toText(ctx.getChild(1));
         let op2 = ctx.getChild(2);
-        let t3 = relopType(op1.typeObj.type, 'bool', ctx);
-        let t4 = relopType(op2.typeObj.type, 'bool', ctx);
-        if (relopType(t3, t4, ctx) === 'bool') {
+        let t3 = relopType(op1.typeObj.type, 'bool', ctx, this.state);
+        let t4 = relopType(op2.typeObj.type, 'bool', ctx, this.state);
+        if (relopType(t3, t4, ctx, this.state) === 'bool') {
             ctx.typeObj = {
                 type: 'bool',
                 value: toText(ctx)
@@ -555,15 +619,21 @@ class Listener extends listener {
     }
 
     enterDcl(ctx) {
-        this.state.push('dcl');
+        this.state.push(cursorCreator('dcl', ctx));
+    }
+    exitDcl(ctx){
+      this.state.pop();
     }
 
+    enterDef(ctx){
+      this.state.push(cursorCreator('def', ctx))
+    }
     exitDef(ctx) {/* skip */
         this.state.pop();
     }
 
     enterType_def(ctx) {
-        this.state.push('typedef');
+        this.state.push(cursorCreator('typedef', ctx));
         let typeName = toText(ctx.getChild(1));
         let typeScope = this.globalTable.getTypeInRoot(typeName);
         let fatherScope = null;
@@ -579,7 +649,6 @@ class Listener extends listener {
         typeScope.addParentScope(fatherScope);
         ctx.table = typeScope;
     }
-
     exitType_def(ctx) {
         this.state.pop();
     }
@@ -593,7 +662,7 @@ class Listener extends listener {
 
     enterFun_def(ctx) {
         let functionSymbol, functionTable;
-        if (this.state === 'typedef') {
+        if (this.state.top().name === 'typedef') {
             let parentTable = ctx.parentCtx.table
             // creation for function table, pointing to global table by parent scope
             functionTable = new SymbolTable(toText(ctx.ID()), {
@@ -617,7 +686,7 @@ class Listener extends listener {
 
 
         ctx.table = functionTable;
-        this.state.push('fundef');
+        this.state.push(cursorCreator('fundef', ctx));
     }
 
     exitFun_def(ctx) {
@@ -625,7 +694,7 @@ class Listener extends listener {
     }
 
     enterBlock(ctx) {
-        if (this.state.top === 'fundef') {
+        if (this.state.top().name === 'fundef') {
             ctx = ctx.parentCtx;
             let returnableArgsTypes, mainArgsTypes = null;
             if (ctx.ASSIGN()) {
@@ -666,9 +735,8 @@ class Listener extends listener {
     }
 
     enterStmtAssign(ctx) {
-        this.state.push('stmt');
+        this.state.push(cursorCreator('stmt', ctx));
     }
-
     exitStmtAssign(ctx) {
         this.state.pop();
     }
@@ -678,7 +746,7 @@ class Listener extends listener {
 
     exitAssign(ctx) {
         if (ctx.children.length === 3) {
-            relopType(ctx.variable().typeObj.type, ctx.expr().typeObj.type, ctx);
+            relopType(ctx.variable().typeObj.type, ctx.expr().typeObj.type, ctx, this.state);
         }
         // else {
         //
@@ -690,7 +758,7 @@ class Listener extends listener {
 
     exitCond_stmtIF(ctx) {
         let valueType = ctx.expr().typeObj.type;
-        relopType(valueType, 'bool', ctx);
+        relopType(valueType, 'bool', ctx, this.state);
     }
 
     enterCond_stmtSWITCH(ctx) {
@@ -698,37 +766,37 @@ class Listener extends listener {
 
     exitCond_stmtSWITCH(ctx) {
         let valueType = ctx.variable().typeObj.type;
-        relopType(valueType, 'int', ctx);
+        relopType(valueType, 'int', ctx, this.state);
     }
 
     enterLoop_stmtFOR(ctx) {
-        this.state.push('loop');
+        this.state.push(cursorCreator('forloop', ctx));
     }
 
     exitLoop_stmtFOR(ctx) {
         let valueType = ctx.expr().typeObj.type;
-        relopType(valueType, 'bool', ctx);
+        relopType(valueType, 'bool', ctx, this.state);
         this.state.pop();
     }
 
     enterLoop_stmtWHILE(ctx) {
-        this.state.push('loop');
+        this.state.push(cursorCreator('whileloop', ctx));
     }
 
     exitLoop_stmtWHILE(ctx) {
         let valueType = ctx.expr().typeObj.type;
-        relopType(valueType, 'bool', ctx);
+        relopType(valueType, 'bool', ctx, this.state);
         this.state.pop();
     }
 
     exitStmtBREAK(ctx) {
-        if (this.state.top !== 'loop') {
+        if (this.state.top().name !== 'loop') {
             throw new ScopeError(`scope Error: break must be used inside loop`)
         }
     }
 
     exitStmtCONTINUE(ctx) {
-        if (this.state.top !== 'loop') {
+        if (this.state.top().name !== 'loop') {
             throw new ScopeError(`scope Error: continue must be used inside loop`)
         }
     }

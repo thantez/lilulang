@@ -14,6 +14,23 @@ const {
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 
+function errorOutput(){
+    let obj = {}
+    for(i in errors){
+        let error = errors[i]
+        let obj2 = {
+            code: error.code,
+            message: error.message,
+            fileStack: error.stack,
+            stack: error.payload? error.payload.stack: error.stack,
+            symbol: error.symbol
+        }
+        obj[i] = obj2;
+    }
+    obj['top'] = undefined;
+    return obj;
+}
+
 // #region code
 if (!Array.prototype.top){
   Array.prototype.top = function(){
@@ -140,11 +157,12 @@ class Listener extends listener {
         //TODO: check start function is in program or not
         //TODO: symbol table of classes and etc ...
         if(errors.length != 0){
-          fs.writeFileSync('.temp/symbolTable_output.json', json(errors, null, 2), 'utf-8');
+            let outputError = errorOutput()
+            fs.writeFileSync('.temp/symbolTable_output.json', json(outputError, null, 2), 'utf-8');
         } else {
           fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
         }
-        
+        return errors;
     }
 
     // #region program

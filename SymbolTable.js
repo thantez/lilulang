@@ -12,7 +12,7 @@ class SymbolTable {
   addSymbol(symbol, ctx) {
     this.symbols.forEach(s => {
       if(symbol.id && symbol.id === s.id){
-        throw new TypeError(`syntax Error: Identifier ${symbol.id} has already been declared in Line: ${ctx.start.line}, Column: ${ctx.start.column}`)
+        return 'error';
       }
     });
     this.symbols.push(symbol);

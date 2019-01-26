@@ -37,6 +37,12 @@ if (!Array.prototype.top){
       return this[this.length - 1];
   };
 };
+
+function assignTypeCheck(left, right, ctx) {
+    let exprType = relopType(left, right, ctx);
+    if (exprType !== left)
+        throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`);
+}
 // #endregion
 
 // #region functions
@@ -359,6 +365,7 @@ class Listener extends listener {
             }
         }
         ctx.id = toText(ref);
+        assignTypeCheck(ref, expr, ctx);
     }
 
     enterRef(ctx) {

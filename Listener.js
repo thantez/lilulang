@@ -38,8 +38,8 @@ if (!Array.prototype.top){
   };
 };
 
-function assignTypeCheck(left, right, ctx) {
-    let exprType = relopType(left, right, ctx, this.state);
+function assignTypeCheck(left, right, ctx, stateStack) {
+    let exprType = relopType(left, right, ctx, stateStack);
     if (exprType !== left)
         throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`);
 }
@@ -365,7 +365,7 @@ class Listener extends listener {
             }
         }
         ctx.id = toText(ref);
-        assignTypeCheck(ref, expr, ctx);
+        assignTypeCheck(ref, expr, ctx, this.state);
     }
 
     enterRef(ctx) {

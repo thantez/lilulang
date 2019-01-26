@@ -18,6 +18,9 @@
      },
      "NotDeclaredReference":{
        "message": "reference have not declaration"
+     },
+     "Start":{
+       "message": "start function is not defined"
      }
    }
  }

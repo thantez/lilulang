@@ -11,7 +11,8 @@ const {
   SemanticScopeError,
   SemanticDestructError,
   SemanticTypeDeclaredError,
-  SemanticNotDeclaredReferenceError
+  SemanticNotDeclaredReferenceError,
+  SemanticStartError
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 
@@ -160,16 +161,19 @@ class Listener extends listener {
 
     exitProgram(ctx) {
         this.state.pop();
-        //DONE: globalTable size
-        //TODO: check start function is in program or not
-        //TODO: symbol table of classes and etc ...
-        if(errors.length != 0){
-            let outputError = errorOutput()
-            fs.writeFileSync('.temp/symbolTable_output.json', json(outputError, null, 2), 'utf-8');
+        let start = this.globalTable.getSymbolInheritance('start')
+        let startScope = start.getChildScope();
+        if(!(start !== 'error' && start.typeObj.type === 'function'  && startScope.symbols.length === 1 && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return==true)){
+            let e = new SemanticStartError(payloadCreator(ctx, this.statem, `'(int)=function start()' is not defined`))
+            fs.writeFileSync('.temp/symbolTable_output.json', json(e, null, 2), 'utf-8');
         } else {
-          fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
+            if(errors.length != 0){
+                let outputError = errorOutput()
+                fs.writeFileSync('.temp/symbolTable_output.json', json(outputError, null, 2), 'utf-8');
+            } else {
+            fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
+            }
         }
-        return errors;
     }
 
     // #region program
@@ -366,6 +370,8 @@ class Listener extends listener {
                 type: expr.typeObj.type,
                 value: expr.value
             }
+        } else {
+            ctx.typeObj = {}
         }
         ctx.id = toText(ref);
     }
@@ -655,10 +661,8 @@ class Listener extends listener {
     }
 
     enterDcl(ctx) {
-        this.state.push(cursorCreator('dcl', ctx));
     }
     exitDcl(ctx){
-      this.state.pop();
     }
 
     enterDef(ctx){
@@ -697,10 +701,15 @@ class Listener extends listener {
     }
 
     enterFun_def(ctx) {
-        let functionSymbol, functionTable;
+        let functionSymbol, functionTable, parentTable;
         if (this.state.top().name === 'typedef') {
-            let parentTable = ctx.parentCtx.table
-            // creation for function table, pointing to global table by parent scope
+            parentTable = ctx.parentCtx.table
+        } else {
+            parentTable = this.globalTable;
+        }
+        // creation for function table, pointing to global table by parent scope
+        functionSymbol = parentTable.getSymbolInheritance(toText(ctx.ID()));
+        if (functionSymbol === 'error') {
             functionTable = new SymbolTable(toText(ctx.ID()), {
                 type: 'function',
                 defineValue: toText(ctx)
@@ -715,16 +724,13 @@ class Listener extends listener {
 
             // add function symbol to type table
             let result = parentTable.addSymbol(functionSymbol, ctx);
-            if(result === 'error'){
-              let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state,`identifier ${symbol.id} has already been declared before`));
-              errors.push(e);
+            if (result === 'error') {
+                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${symbol.id} has already been declared before`));
+                errors.push(e);
             }
         } else {
-            let parentTable = this.globalTable;
-            functionTable = parentTable.getChildTable(toText(ctx.ID()));
+            functionTable = functionSymbol.getChildScope();
         }
-
-
         ctx.table = functionTable;
         this.state.push(cursorCreator('fundef', ctx));
     }
@@ -883,7 +889,21 @@ class Listener extends listener {
         //     throw new typeError(`type Error: type mismatch`);
     }
 
+    enterFunc_callREAD(ctx){
+        ctx.table = ctx.parentCtx.table;
+    }
+    exitFunc_callREAD(ctx){
+        ctx.typeObj = {
+            type: 'function'
+        }
+    }
 
+    enterFunc_callWRITE(ctx){
+        ctx.table = ctx.parentCtx.table;
+    }
+    exitFunc_callWRITE(ctx){
+
+    }
     // #region funcs and stmts
 
     // #endregion

@@ -17,10 +17,10 @@ app.get('/', (req, res) =>{
    res.sendFile('index.html')
 })
 
-app.post('/', (req, res) => {
-   let body=req.body;
+//app.post('/', (req, res) => {
+   //let body=req.body.text;
    
-   let chars = new antlr4.InputStream(body || input)
+   let chars = new antlr4.InputStream(input)
    let lexer = new liluLexer.lilu_grammarLexer(chars)
 
    let errorListener = new ErrorListener();
@@ -44,7 +44,7 @@ app.post('/', (req, res) => {
    }
    let output = JSON.parse(fs.readFileSync('./.temp/symbolTable_output.json'))
 
-   res.json(output);
-})
+   //res.json(output);
+//})
 
 app.listen(8080);

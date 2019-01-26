@@ -39,7 +39,7 @@ if (!Array.prototype.top){
 };
 
 function assignTypeCheck(left, right, ctx) {
-    let exprType = relopType(left, right, ctx);
+    let exprType = relopType(left, right, ctx, this.state);
     if (exprType !== left)
         throw new TypeError(`type Error: expected ${t1} but found ${t2} in ${/* TODO: error address */null}`);
 }

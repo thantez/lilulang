@@ -316,7 +316,7 @@ class Listener extends listener {
 
     // #endregion
     enterVariable_def(ctx){
-
+        ctx.table = ctx.parentCtx.table;
     }
     exitVariable_def(ctx) {
         let preType = (ctx.CONST() ? 'const' : 'var');
@@ -324,7 +324,7 @@ class Listener extends listener {
         let vars = ctx.variable_val();
         let typeObj = null;
 
-        let table = ctx.parentCtx.table;
+        let table = ctx.table;
 
         vars.forEach(vr => {
             let id = vr.id;
@@ -359,8 +359,8 @@ class Listener extends listener {
     }
 
     exitVariable_val(ctx) {
-        let ref = ctx.ref()
         let expr = ctx.expr();
+        let ref = ctx.ref();
         if (expr) {
             ctx.typeObj = {
                 type: expr.typeObj.type,
@@ -378,10 +378,6 @@ class Listener extends listener {
         let id = toText(ctx.ID());
         let table = ctx.table
         let symbol = table.getSymbolInheritance(id);
-        if(symbol === 'error'){
-            let e = new SemanticNotDeclaredReferenceError(payloadCreator(ctx, this.state, `reference ${id} not declared before`));
-            errors.push(e)
-        }
         //TODO: array
         ctx.symbol = symbol;
     }
@@ -800,7 +796,10 @@ class Listener extends listener {
     exitVariable(ctx){
         for(let ref of ctx.ref()){
             let symbol = ref.symbol;
-            
+            if(symbol === 'error'){
+                let e = new SemanticNotDeclaredReferenceError(payloadCreator(ctx, this.state, `reference ${id} not declared before`));
+                errors.push(e)
+            }
         }
     }
 

@@ -61,6 +61,19 @@ class SymbolTable {
     }
   }
 
+  getSymbolInheritance(id){
+    for (let symbol of this.symbols){
+      if(symbol.id===id){
+        return symbol;
+      }
+    }
+    if(this.parentScope){
+      return this.parentScope.getSymbolInheritance(id);
+    } else {
+      return 'error'
+    }
+  }
+
   isEmpty(){
     return this.symbols.length === 0;
   }

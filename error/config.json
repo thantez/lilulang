@@ -15,6 +15,9 @@
      },
      "TypeDeclared":{
       "message": "identifier has already been declared before"
+     },
+     "NotDeclaredReference":{
+       "message": "reference have not declaration"
      }
    }
  }

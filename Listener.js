@@ -315,7 +315,9 @@ class Listener extends listener {
     }
 
     // #endregion
+    enterVariable_def(ctx){
 
+    }
     exitVariable_def(ctx) {
         let preType = (ctx.CONST() ? 'const' : 'var');
         let type = toText(ctx.type());
@@ -353,20 +355,19 @@ class Listener extends listener {
     }
 
     enterVariable_val(ctx) {
-
+        ctx.table = ctx.parentCtx.table
     }
 
     exitVariable_val(ctx) {
-        let ref = ctx.ref().symbol.typeObj.type
+        let ref = ctx.ref()
         let expr = ctx.expr();
         if (expr) {
             ctx.typeObj = {
                 type: expr.typeObj.type,
                 value: expr.value
             }
-            assignTypeCheck(ref.symbol.typeObj.type, expr.typeObj.type, ctx, this.state);
         }
-        ctx.id = toText(ref.symbol.id);
+        ctx.id = toText(ref);
     }
 
     enterRef(ctx) {

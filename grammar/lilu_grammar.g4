@@ -67,7 +67,7 @@ loop_stmt:
 	FOR (type? assign)? SEMI expr SEMI assign? block	# loop_stmtFOR
 	| WHILE expr block									# loop_stmtWHILE;
 
-list: LBRACK (expr | list) (COMMA (expr | list))* RBRACK;
+list: LBRACK expr (COMMA expr)* RBRACK;
 
 params: expr (COMMA expr)* ;
 
@@ -83,7 +83,7 @@ stmt:
 	| func_call SEMI							# stmtFunc_call
 	| cond_stmt										# stmtCond_stmt
 	| loop_stmt										# stmtLoop_stmt
-	| RETURN SEMI									#	 stmtRETURN
+	| RETURN SEMI									# stmtRETURN
 	| BREAK SEMI									# stmtBREAK
 	| CONTINUE SEMI								    # stmtCONTINUE
 	| DESTRUCT (LBRACK RBRACK)* ID SEMI		        # stmtDESTRUCT

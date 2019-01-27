@@ -13,7 +13,8 @@ const {
   SemanticTypeDeclaredError,
   SemanticNotDeclaredReferenceError,
   SemanticStartError,
-  SemanticReDefinedError
+  SemanticReDefinedError,
+  SemanticNotDeclaredFunctionError
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 
@@ -598,9 +599,26 @@ class Listener extends listener {
     exitParanNil(ctx){}
 
     enterParanList(ctx){
-        //TODO:
     }
-    exitParanList(ctx){}
+    exitParanList(ctx){
+        let exprs = ctx.expr();
+        let mainTypeObj = exprs[0].typeObj;
+        let mainType = mainTypeObj.type
+        let subDim = mainTypeObj.dimension;
+        exprs.forEach(expr => {
+            let exType = expr.typeObj.type;
+            if(exType != mainType){
+                let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${mainType} but found ${exType}`))
+                errors.push(e);
+            }
+        })
+        ctx.typeObj = {
+            dimension: dimension + 1,
+            width: exprs.length,
+            innerType: mainTypeObj,
+            type: 'list'
+        }
+    }
 
     enterParanVar(ctx){
         ctx.table = ctx.parentCtx.table
@@ -635,6 +653,7 @@ class Listener extends listener {
     enterParanConst(ctx){}
     exitParanConst(ctx){
         ctx.typeObj = ctx.getChild(0).typeObj;
+        ctx.dimension = 0;
     }
 
     enterParanID(ctx){
@@ -894,6 +913,9 @@ class Listener extends listener {
         let symbol = refs.top().symbol;
         ctx.symbol = symbol;
         ctx.typeObj = symbol.typeObj;
+        if(ctx.handleCtx){
+            ctx.handleCtx.table = symbol.getChildScope();
+        }
         this.state.pop()
     }
 
@@ -970,14 +992,30 @@ class Listener extends listener {
         }
     }
 
+    enterStmtDESTRUCT(ctx) {
+        ctx.table = ctx.parentCtx.table
+    }
     exitStmtDESTRUCT(ctx) {
-        let type = ctx.ID.typeObj.type;
-        if (type.typeObj.type !== 'userType')
-            throw new SemanticDestructError(payloadCreator(ctx, this.state,`destruct can be used with userTypes`));
-        //todo array
-        // else if (type === 'array')
-        // if ((ctx.children.length - 3) / 2 !== arrayDimension)
-        //     throw new typeError(`type Error: type mismatch`);
+        let symbol = ctx.table.getSymbolInheritance(toText(ctx.ID()))
+        if(symbol === 'error'){
+            let e = new SemanticNotDeclaredReferenceError(payloadCreator(ctx, this.state, `identifier ${id} has not been declared`))
+            errors.push(e);
+            return;
+        }
+        let type = symbol.typeObj.type;
+        let LBRACK = ctx.LBRACK()
+        if(!LBRACK){
+            LBRACK = [];
+        }
+        if(ctx.LBRACK().length != symbol.typeObj.dimension){
+            let e = new SemanticDestructError(payloadCreator(ctx, this.state,`destruct can be used with same type about array`));
+            errors.push(e)
+            return;
+        } 
+        let userType = this.globalTable.getTypeInRoot(id)
+        if (userType.typeObj.type !== 'userType')
+            let e = new SemanticDestructError(payloadCreator(ctx, this.state,`destruct can be used with userTypes`));
+            errors.push(e)
     }
 
     enterStmtFunc_call(ctx){
@@ -1007,11 +1045,62 @@ class Listener extends listener {
         }
     }
 
+    enterHandle_call(ctx){
+        ctx.table = ctx.table || ctx.parentCtx.table;
+    }
+    exitHandle_call(ctx){
+        if(ctx.table == undefined)
+            throw new Error();
+        let params = [];
+        if(ctx.params()){
+            params = ctx.params.expr()
+        }
+        let id = toText(ctx.ID())
+        let table = ctx.table;
+        let symbol = table.getSymbolInheritance(id);
+        if(symbol === 'error'){
+            let e = new SemanticNotDeclaredFunctionError(payloadCreator(ctx, this.state, `function ${id} have been not declared in this scope (in scope of ${table.id})`))
+            errors.push(e);
+            symbol = new Symbol(id, {}, -1, {symbols: []})
+        }
+        let scope = symbol.getChildScope();
+        let i = 0;
+        scope.symbols.forEach(s => {
+            let symbolType = s.typeObj.type;
+            ctx.typeObj = {}
+            if(i == params.length){
+                let e = new SemanticNotDeclaredFunctionError(payloadCreator(ctx, this.state, `function ${id} have been not declared in this scope with this signiture (in scope of ${table.id})`))
+                errors.push(e)
+                return;
+            }
+            let paramType = params[i].typeObj.type;
+            if(s.typeObj.return == false){
+                if(symbolType != paramType){
+                    let e = new SemanticNotDeclaredFunctionError(payloadCreator(ctx, this.state, `function ${id} have been not declared in this scope with this signiture (in scope of ${table.id})`))
+                    errors.push(e)
+                }
+                i += 1;
+            } else if(s.typeObj.return === undefined && i === params.length){
+                return
+            } else if(s.typeObj.return == true){}
+            else {
+                let e = new SemanticNotDeclaredFunctionError(payloadCreator(ctx, this.state, `function ${id} have been not declared in this scope with this signiture (in scope of ${table.id})`))
+                errors.push(e)
+                return;
+            }
+            
+        });
+        ctx.symbol = symbol;
+        ctx.typeObj = symbol.typeObj;
+    }
+
     enterFunc_callVariable(ctx){
         ctx.table = ctx.parentCtx.table;
+        ctx.variable().handleCtx = ctx.handle_call();
+        this.state.push(cursorCreator('funccall', ctx))
     }
     exitFunc_callVariable(ctx){
-
+        this.state.pop();
     }
     // #region funcs and stmts
 

@@ -24,6 +24,9 @@
      },
      "ReDefined":{
        "message":"variable has already been declared in the current scope"
+     },
+     "NotDeclaredFunction":{
+       "message":"function has not been declared in this scope"
      }
    }
  }

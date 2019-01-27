@@ -14,13 +14,16 @@
        "message": "destruct can be used with types"
      },
      "TypeDeclared":{
-      "message": "identifier has already been declared before"
+      "message": "type has already been declared before"
      },
      "NotDeclaredReference":{
-       "message": "reference have not declaration"
+       "message": "reference has not been declared"
      },
      "Start":{
        "message": "start function is not defined"
+     },
+     "ReDefined":{
+       "message":"variable has already been declared in the current scope"
      }
    }
  }

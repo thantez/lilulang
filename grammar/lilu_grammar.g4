@@ -67,11 +67,9 @@ loop_stmt:
 	FOR (type? assign)? SEMI expr SEMI assign? block	# loop_stmtFOR
 	| WHILE expr block									# loop_stmtWHILE;
 
-list: LBRACK ( expr | list) ( COMMA ( expr | list))* RBRACK;
+list: LBRACK (expr | list) (COMMA (expr | list))* RBRACK;
 
-params: expr # paramsExpr
-      | expr COMMA params 	# paramsExprCOMMA
-      ;
+params: expr (COMMA expr)* ;
 
 handle_call: ID LPAREN params? RPAREN;
 
@@ -82,10 +80,10 @@ func_call: (variable DOT)? handle_call	# func_callVariable
 
 stmt:
 	assign SEMI										# stmtAssign
-	| func_call SEMI								# stmtFunc_call
+	| func_call SEMI							# stmtFunc_call
 	| cond_stmt										# stmtCond_stmt
 	| loop_stmt										# stmtLoop_stmt
-	| RETURN SEMI									# stmtRETURN
+	| RETURN SEMI									#	 stmtRETURN
 	| BREAK SEMI									# stmtBREAK
 	| CONTINUE SEMI								    # stmtCONTINUE
 	| DESTRUCT (LBRACK RBRACK)* ID SEMI		        # stmtDESTRUCT
@@ -106,18 +104,20 @@ expr:
 	| expr BITOR expr							# exprExprBitor
 	| expr AND expr								# exprExprAnd
 	| expr OR expr								# exprExprOr
-	| (
-		LPAREN expr RPAREN
-		| ID
-		| const_val
-		| ALLOCATE handle_call
-		| func_call
-		| variable
-		| list
-		| NIL
-	) # exprParen
+	| parans											 # exprParen
 	;
 
+
+parans:
+		LPAREN expr RPAREN #paranParan
+		| ID								#paranID
+		| const_val					#paranConst
+		| ALLOCATE handle_call	#paranAllocate
+		| func_call						#paranFunc
+		| variable						#paranVar
+		| list								#paranList
+		| NIL									#paranNil
+		;
 //functions
 
 fun_def:
@@ -137,11 +137,11 @@ def: ft_def+;
 
 //assignment
 
-assign: (
-        variable
-        | LPAREN variable ( COMMA variable)* RPAREN
-        )
-        ASSIGN expr;
+assign: leftAssign ASSIGN expr;
+
+leftAssign: variable #singleAssign
+					| LPAREN variable ( COMMA variable)* RPAREN #multiAssign
+					; 
 
 unary_op: SUB
         | BANG

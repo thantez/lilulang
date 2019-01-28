@@ -11,7 +11,6 @@ html {
 body {
   margin: 0;
   height: 100%;
-  background: orange;
   font-family: sans-serif;
 }
 
@@ -20,10 +19,25 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 1rem;
-  background: blueviolet;
+  background: #464646;
+  color: #8b8b8b;
+  height: 5vh;
 }
 .header h1 {
   margin: 0;
+}
+
+#compile-btn {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border-radius: 4px;
+  background: hsl(0, 0%, 40%);
+  color: hsl(0, 0%, 85%);
+  border: none;
+  cursor: pointer;
+}
+#compile-btn:hover {
+  background: hsl(0, 0%, 45%);
 }
 
 .editor {
@@ -35,8 +49,8 @@ body {
   width: 50px;
   text-align: right;
   background: #353535;
-  color: rgb(149, 149, 149);
-  height: 60vh;
+  color: #959595;
+  height: 65vh;
   font-size: 14px;
   font-family: Consolas, Liberation Mono, Courier, monospace;
   line-height: 21px;
@@ -46,7 +60,7 @@ body {
   position: relative;
   background: #1f1f1f !important;
   overflow: auto;
-  height: 60vh;
+  height: 65vh;
   width: calc(100% - 50px);
 }
 
@@ -60,7 +74,7 @@ code {
   padding: 20px;
 
   width: 100%;
-  height: 60vh;
+  height: 65vh;
 
   outline: 0;
   border: 0;
@@ -93,15 +107,18 @@ code {
 }
 
 textarea::-webkit-scrollbar,
-code::-webkit-scrollbar{
+code::-webkit-scrollbar,
+#output::-webkit-scrollbar {
   width: 10px;
 }
 textarea::-webkit-scrollbar-track,
-code::-webkit-scrollbar-track {
+code::-webkit-scrollbar-track,
+#output::-webkit-scrollbar-track {
   background: rgb(82, 82, 82);
 }
 textarea::-webkit-scrollbar-thumb,
-code::-webkit-scrollbar-thumb {
+code::-webkit-scrollbar-thumb,
+#output::-webkit-scrollbar-thumb {
   background-color: rgb(161, 161, 161);
 }
 
@@ -114,9 +131,26 @@ code::-webkit-scrollbar-thumb {
   display: none;
 }
 
+.output-container {
+  display: flex;
+  background: #464646;
+}
+.output-header {
+  margin: 0;
+  width: 50px;
+  line-height: 50px;
+  background: #353535;
+  color: #959595;
+  font-size: 0.9rem;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
 #output {
   margin: 0;
   padding: 20px;
   height: 30vh;
-  background: greenyellow;
+  width: 100%;
+  color: #b8b8b8;
+  font-size: 1.2rem;
+  overflow-y: scroll;
 }

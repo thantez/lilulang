@@ -155,8 +155,7 @@ class Symbol {
     *
     * @method constructor
     * @param {String} id content of id lex of symbol
-    * @param {String} type int or float or string or bool or user types
-    * @param {Integer} width float = 8 (=2B), string = 2*charsCount+2, other = 4
+    * @param {Object} typeObj int or float or string or bool or user types
     * @param {Integer} offset default offset = 0, offset = offset + width
     * @param {SymbolTable} childScopeSymbolTable child scope symbol table
     */
@@ -176,6 +175,9 @@ class Symbol {
         } else {
           this.width = 2;
         }
+        break;
+      case 'if'||'forloop'||'switch'||'whileloop'||'else':
+        this.width = 0;
         break;
       default:
         this.width = 4;

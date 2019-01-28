@@ -53,8 +53,21 @@ type B : A{
       return;
    }
 
-   protected (int minus) = function minusOne(int adad, float adad2){
-
+   protected (int minus) = function minusOne(bool adad, float adad2){
+      for int i = 0; i <= 2; i = i+1 {
+         int z = 1;
+      }
+      while(adad>2){
+         this.adad2 = 4.1;
+      }
+      switch adad {
+         case 1:{
+            int p = 2;
+         }
+         default:{
+            minus = 2;
+         }
+      }
    }
 }
 

@@ -590,6 +590,13 @@ class Listener extends listener {
             type: symbol.type,
             value: toText(ctx.ID())
         }
+        if(this.state[this.state.length-2].name === 'forloop' && symbol === 'error' && toText(ctx.parentCtx.parentCtx.parentCtx.parentCtx.getChild(0))==='for'){
+            symbol = new Symbol(id, {
+                type: toText(ctx.parentCtx.parentCtx.parentCtx.parentCtx.type()),
+                value: toText(ctx.parentCtx.parentCtx.parentCtx.expr())
+            }, table.getNewOffset(), table)
+            table.addSymbol(symbol, ctx);
+        }
         if (this.state.top().name === 'vardef' && symbol != 'error') {
             let e = new SemanticReDefinedError(payloadCreator(ctx, this.state, `variable ${id} has already been declared in the current scope`))
             errors.push(e)
@@ -1031,6 +1038,32 @@ class Listener extends listener {
                 }
             });
             ctx.table = functionTable;
+        } else if (this.state.top().name === 'forloop') {
+            let blockParent = ctx.parentCtx.table;
+            let type = this.state.top().name;
+            let blockTable = new SymbolTable(type, {
+                type,
+                value: toText(ctx)
+            }, blockParent)
+            let forstmt = ctx.parentCtx;
+            if(forstmt.assign() && forstmt.type()){
+                let vars = forstmt.assign()[0].getChild(0).variable();
+                if(vars.length == undefined){
+                    vars = [vars];
+                }
+                vars.forEach(v =>{
+                    let result = blockParent.getSymbolInheritance(toText(v), true, false)
+                    if (result != 'error'){
+                        blockTable.addSymbol(new Symbol(result.id, result.typeObj, blockTable.getNewOffset(), result.childScope), ctx);
+                        blockParent.symbols.pop()
+                    }
+                })
+            }
+            let blockSymbol = new Symbol(`${type}-${blockParent.size}`, { type }, blockParent.getNewOffset(), blockTable)
+            blockParent.addSymbol(blockSymbol, ctx);
+            ctx.table = blockTable;
+
+
         } else {
             let blockParent = ctx.parentCtx.table;
             let type = this.state.top().name;
@@ -1042,9 +1075,11 @@ class Listener extends listener {
             blockParent.addSymbol(blockSymbol, ctx);
             ctx.table = blockTable;
         }
-
+        this.state.push(cursorCreator('block', ctx))
     }
-    exitBlock(ctx) {}
+    exitBlock(ctx) {
+        this.state.pop()
+    }
 
     enterStmtAssign(ctx) {
         ctx.table = ctx.parentCtx.table
@@ -1092,7 +1127,7 @@ class Listener extends listener {
     enterVariable(ctx) {
         let refs = ctx.ref();
         if (ctx.THIS()) {
-            ctx.table = ctx.parentCtx.table;
+            ctx.table = ctx.parentCtx.parentCtx.table;
             if(!have(this.state, 'typedef')){
                 let e = new SemanticScopeError(payloadCreator(ctx, this.state, `this should use in type defination`))
                 errors.push(e);

@@ -148,13 +148,18 @@ function updateCodePres(text) {
     presCodeText = presCodeText.replace(regex, `<span style="color: ${COLORS[key]}">${key}</span>`);
   }
 
-  // console.log(presCodeText.match(/'(.*?)'/g));
-  // // presCodeText = presCodeText.replace(/'(.*?)'/g, '<span style="color: red !important;">$&</span>');
-  // presCodeText = presCodeText.replace(/'(.*?)'/g, (match, p1) => {
-  //   let p = p1;
-  //   p = p.replace(/style="(.*)?"/g, 'style="color: blue"');
-  //   return p;
-  // });
+  // Multi-line comments
+  presCodeText = presCodeText.replace(/%~(.|[\r\n])*?~%/g, `<i style="color: gray">$&</i>`);
+  // Strings
+  presCodeText = presCodeText.replace(/'(.|[\r\n])*?'/g, `<i style="color: #fff">$&</i>`);
+
+  // Remove highlights inside strings
+  // Not working for multi-line comments yet
+  presCodeText = presCodeText.replace(new RegExp('<i .*?>.*?</i>', 'g'), match => {
+    let matchClone = match;
+    matchClone = matchClone.replace(new RegExp('<span .*?>(.*?)</span>', 'g'), (m, subP) => subP);
+    return matchClone;
+  });
 
   editorPres.innerHTML = presCodeText
     .split("\n")

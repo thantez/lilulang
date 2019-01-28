@@ -48,6 +48,8 @@ const editorPres = get('#editor-pres');
 const compileBtn = get('#compile-btn');
 const output = get('#output');
 const lineNumbers = get('#line-numbers');
+const symbolTable = get('#symbol-table-container');
+const symbolTableCloseBtn = get('.symbol-table-close-btn');
 
 let rawCodeText = `(int x, int z)=function twoPower(int a){
   const int c = 2;
@@ -84,7 +86,12 @@ editorInput.addEventListener('scroll', e => {
   lineNumbers.scrollTop = e.target.scrollTop;
 })
 
-compileBtn.addEventListener('click', handleCompile)
+compileBtn.addEventListener('click', handleCompile);
+
+symbolTableCloseBtn.addEventListener('click', () => {
+  symbolTable.style.display = "none";
+  get('.tree').innerHTML = "";
+})
 
 function handleCompile() {
   fetch('/', {
@@ -106,7 +113,18 @@ function resolveCompileResult(result) {
 
   if (result.id) {
     // Successful compile
-    output.innerHTML = "Successful compile! (Display Symbol Table?)"
+    output.innerHTML = "Successful compile!"
+    symbolTable.style.display = "block";
+
+    get('.tree').innerHTML = JSONTree.create(result);
+    // Default fold all
+    const f = document.getElementsByClassName('jstFold');
+    for (let i = 1; i < f.length; i++) {
+      const it = f[i];
+      setTimeout(() => {
+        it.click();
+      }, 0);
+    }
   } else if (result.code) {
     // Generic Syntax Error
     output.innerHTML = `${result.code}: ${result.payload.message}`;

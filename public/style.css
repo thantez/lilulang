@@ -58,7 +58,7 @@ body {
 }
 .editor-holder {
   position: relative;
-  background: #1f1f1f !important;
+  background: #1f1f1f;
   overflow: auto;
   height: 65vh;
   width: calc(100% - 50px);
@@ -108,18 +108,27 @@ code {
 
 textarea::-webkit-scrollbar,
 code::-webkit-scrollbar,
-#output::-webkit-scrollbar {
+#output::-webkit-scrollbar,
+#symbol-table-container::-webkit-scrollbar {
   width: 10px;
 }
 textarea::-webkit-scrollbar-track,
 code::-webkit-scrollbar-track,
-#output::-webkit-scrollbar-track {
+#output::-webkit-scrollbar-track,
+#symbol-table-container::-webkit-scrollbar-track {
   background: rgb(82, 82, 82);
 }
 textarea::-webkit-scrollbar-thumb,
 code::-webkit-scrollbar-thumb,
-#output::-webkit-scrollbar-thumb {
+#output::-webkit-scrollbar-thumb,
+#symbol-table-container::-webkit-scrollbar-thumb {
   background-color: rgb(161, 161, 161);
+}
+
+.error-line {
+  padding: 3px 0;
+  border-radius: 4px;
+  background: hsla(0, 100%, 50%, 0.30);
 }
 
 /* hide scroll bar */
@@ -153,4 +162,31 @@ code::-webkit-scrollbar-thumb,
   color: #b8b8b8;
   font-size: 1.2rem;
   overflow-y: scroll;
+}
+
+#symbol-table-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 20px;
+  height: 100vh;
+  width: 100vw;
+  background: #1f1f1f;
+  z-index: 5;
+  overflow: auto;
+  display: none;
+}
+.symbol-table-close-btn {
+  position: fixed;
+  top: 5px;
+  right: 20px;
+  background: transparent;
+  color: #8b8b8b;
+  font-size: 3rem;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+.symbol-table-close-btn:hover {
+  color: #a0a0a0;
 }

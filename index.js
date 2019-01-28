@@ -41,7 +41,7 @@ app.get('/', (req, res) =>{
    }
    catch (e){
       console.error(e)
-      fs.writeFileSync('./.temp/symbolTable_output.json', JSON.stringify(e))
+      fs.writeFileSync('./.temp/symbolTable_output.json', JSON.stringify({0: e}))
    }
    let output = JSON.parse(fs.readFileSync('./.temp/symbolTable_output.json'))
 

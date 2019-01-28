@@ -56,8 +56,11 @@ dcl: ft_dcl?;
 
 //statement
 
+else_stmt:
+	ELSE block;
+
 cond_stmt:
-	IF expr block (ELSE block)? # cond_stmtIF
+	IF expr block (else_stmt)? # cond_stmtIF
 	| SWITCH variable LBRACE (
 		CASE (INT_CONST | HEX_CONST) COLON block
 	)* DEFAULT COLON block RBRACE # cond_stmtSWITCH

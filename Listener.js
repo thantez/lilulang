@@ -498,7 +498,7 @@ class Listener extends listener {
         let type = toText(ctx.type());
         let vars = ctx.variable_val();
         let typeObj = null;
-
+        let accmod = ctx.parentCtx.accmod;
         let table = ctx.table;
 
         vars.forEach(vr => {
@@ -523,6 +523,10 @@ class Listener extends listener {
                 }
             }
             let vrSymbol = new Symbol(id, typeObj, table.getNewOffset(), null);
+            if(type === 'string' && vrType.value){
+                vrSymbol.width = ((vrType.value.length) - 1) * 2;
+            }
+            vrSymbol.accmod = accmod;
             let result = table.addSymbol(vrSymbol, ctx);
             if (result === 'error') {
                 let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${symbol.id} has already been declared before`));
@@ -541,10 +545,7 @@ class Listener extends listener {
 
     exitVariable_val(ctx) {
         if (ctx.expr()) {
-            ctx.typeObj = {
-                type: ctx.expr().typeObj.type,
-                value: ctx.expr().value
-            }
+            ctx.typeObj = ctx.expr().typeObj
         } else {
             ctx.typeObj = {}
         }
@@ -746,7 +747,11 @@ class Listener extends listener {
         let id = allocatedType.id;
         let typeObj = allocatedType.typeObj;
         let allocatedSymbol = new Symbol(id, typeObj, table.getNewOffset(), typeScope)
-        table.addSymbol(allocatedSymbol, ctx);
+        let result = table.addSymbol(allocatedSymbol, ctx);
+        if(result === 'error'){
+            let e = new SemanticReDefinedError(payloadCreator(ctx, this.state, `alocated symbol has been defined before`));
+            errors.push(e);
+        }
         ctx.symbol = allocatedSymbol;
         ctx.typeObj = typeObj;
         ctx.id = id;
@@ -860,12 +865,26 @@ class Listener extends listener {
         this.state.push(cursorCreator('typedef', ctx));
         let typeName = toText(ctx.getChild(1));
         let typeScope = this.globalTable.getTypeInRoot(typeName);
+        if(!typeScope){
+            typeScope = new SymbolTable(typeName, {
+                type: typeName
+            }, null)
+            let typeSymbol = new Symbol(typeName, {
+                type: 'userType',
+                value: typeName
+            }, this.globalTable.getNewOffset(), typeScope)
+            let result = this.globalTable.addSymbol(typeSymbol, ctx);
+            if(result === 'error'){
+                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `type ${typeName} has been implemented before!`))
+                errors.push(e);
+            }
+        }
         let fatherScope = null;
         if (ctx.COLON()) {
             let fatherName = toText(ctx.getChild(3));
             fatherScope = this.globalTable.getTypeInRoot(fatherName);
-            if (!fatherScope.isImplemented) {
-                let e = new SemanticFatherTypeimplementationError(payloadCreator(ctx, this.state, `class ${fatherName} not implemented.`))
+            if (!fatherScope) {
+                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `type ${fatherName} not declared.`))
                 errors.push(e);
             }
         }
@@ -879,13 +898,13 @@ class Listener extends listener {
 
     enterComponent(ctx) {
         ctx.table = ctx.parentCtx.table;
+        ctx.accmod = ctx.access_modifier()? toText(ctx.access_modifier()): 'private';
     }
-
-    exitComponent(ctx) {
-    }
+    exitComponent(ctx) {}
 
     enterFun_def(ctx) {
         let functionSymbol, functionTable, parentTable;
+        let accmod = ctx.parentCtx.accmod;
         if (this.state.top().name === 'typedef') {
             parentTable = ctx.parentCtx.table
         } else {
@@ -906,6 +925,7 @@ class Listener extends listener {
                 defineValue: toText(ctx)
             }, parentTable.getNewOffset(), functionTable)
 
+            functionSymbol.accmod = accmod;
             // add function symbol to type table
             let result = parentTable.addSymbol(functionSymbol, ctx);
             if (result === 'error') {
@@ -961,6 +981,7 @@ class Listener extends listener {
                     value: typeObj.value,
                     return: false
                 }, functionTable.getNewOffset(), null);
+                argSymbol.width = 4;
                 let result = functionTable.addSymbol(argSymbol, ctxP);
                 if (result === 'error') {
                     let e = new SemanticTypeDeclaredError(payloadCreator(ctxP, this.state, `identifier ${symbol.id} has already been declared before`));
@@ -969,14 +990,14 @@ class Listener extends listener {
             });
             ctx.table = functionTable;
         } else {
-            let blockParent = ctx.parentCtx;
-            let type = blockParent.IF() ? 'if' : 'loop'
+            let blockParent = ctx.parentCtx.table;
+            let type = this.state.top().name;
             let blockTable = new SymbolTable(type, {
                 type,
                 value: toText(ctx)
-            }, ctx.parentCtx.table)
-            let blockSymbol = new Symbol(null, { type }, ctx.parentCtx.table.getNewOffset(), blockTable)
-            ctx.parentCtx.table.addSymbol(blockSymbol, ctx);
+            }, blockParent)
+            let blockSymbol = new Symbol(`${type}-${blockParent.size}`, { type }, blockParent.getNewOffset(), blockTable)
+            blockParent.addSymbol(blockSymbol, ctx);
             ctx.table = blockTable;
         }
 
@@ -1013,6 +1034,12 @@ class Listener extends listener {
                     return;
                 }
                 symbols[i].typeObj.value = exprTypes[i].value || 'value'
+                if(lType === 'string' && exprTypes[i].value){
+                    let dif = symbols[i].width;
+                    symbols[i].width=((exprTypes[i].value.length-1)*2);
+                    dif -= symbols[i].width
+                    ctx.table.size -= dif;
+                }
             }
         } else {
             let e = new SemanticCountOfPartsOfAssignError(payloadCreator(ctx, this.state, `The count of parties of assign are not equal in ${toText(ctx)}`));
@@ -1109,12 +1136,23 @@ class Listener extends listener {
         this.state.pop();
     }
 
+    enterElse_stmt(ctx){
+        ctx.table = ctx.parentCtx.table;
+        this.state.push(cursorCreator('else', ctx))
+    }
+    exitElse_stmt(ctx){
+        this.state.pop();
+    }
+
     enterCond_stmtSWITCH(ctx) {
+        ctx.table = ctx.parentCtx.table;
+        this.state.push(cursorCreator('switch',ctx))
     }
 
     exitCond_stmtSWITCH(ctx) {
         let valueType = ctx.variable().typeObj.type;
         relopType(valueType, 'int', ctx, this.state);
+        this.state.pop();
     }
 
     enterLoop_stmtFOR(ctx) {
@@ -1123,16 +1161,25 @@ class Listener extends listener {
     }
 
     exitLoop_stmtFOR(ctx) {
+        if(ctx.expr().typeObj.array){
+            let e = new SemanticStmtExprError(payloadCreator(ctx, this.state, `you can't use multi value in expressions of statement statement`))
+            errors.push(e)
+        }
         let valueType = ctx.expr().typeObj.type;
         relopType(valueType, 'bool', ctx, this.state);
         this.state.pop();
     }
 
     enterLoop_stmtWHILE(ctx) {
+        ctx.table = ctx.parentCtx.table
         this.state.push(cursorCreator('whileloop', ctx));
     }
 
     exitLoop_stmtWHILE(ctx) {
+        if(ctx.expr().typeObj.array){
+            let e = new SemanticStmtExprError(payloadCreator(ctx, this.state, `you can't use multi value in expressions of statement statement`))
+            errors.push(e)
+        }
         let valueType = ctx.expr().typeObj.type;
         relopType(valueType, 'bool', ctx, this.state);
         this.state.pop();

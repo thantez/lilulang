@@ -103,7 +103,7 @@ class Symbol {
     this.typeObj = typeObj;
     this.offset = offset;
     this.childScope = childScopeSymbolTable;
-
+  
     switch(typeObj.type){
       case 'float':
         this.width = 8;
@@ -113,7 +113,6 @@ class Symbol {
           this.width = (typeObj.value.length + 1)*2;
         } else {
           this.width = 2;
-          console.log(typeObj)
         }
         break;
       default:

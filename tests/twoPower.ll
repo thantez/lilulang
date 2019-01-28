@@ -10,10 +10,16 @@
 }
 
 (int a) = function start() {
+   string str = 'hello';
+   str = 'hi';
    int x = 2;
    int b;
    read(x);
    (a, b) = twoPower(x);
    write(a);
    return;
+}
+
+type A{
+   public int a = 2;
 }

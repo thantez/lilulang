@@ -19,7 +19,8 @@ const {
     SemanticConstAssignError,
     SemanticReturnWithoutAssignError,
     SemanticStmtExprError,
-    SemanticFunctionAllocatedError
+    SemanticFunctionAllocatedError,
+    SemanticNotImplementedDeclaresError
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 
@@ -108,25 +109,41 @@ function relopType(t1, t2, ctx, stateStack) {
         else
             switch (t1) {
                 case 'int':
-                    if (t2 === 'float')
-                        return 'float';
-                    else if (t2 === 'bool')
-                        return 'int';
+                    switch(t2){
+                        case 'float':
+                            return 'float';
+                        case 'bool':
+                            return 'int';
+                        case 'string':
+                            return 'string';
+                    }
                     break;
-
                 case 'float':
-                    if (t2 === 'int')
-                        return 'float';
+                    switch(t2){
+                        case 'int':
+                            return 'float';
+                        case 'bool':
+                            return 'float';
+                    }
                     break;
-
                 case 'string':
-                    if (t2 === 'bool')
-                        return 'string';
-                    else if (t2 === 'int')
-                        return 'string';
+                    switch(t2){
+                        case 'bool':
+                            return 'string';
+                        case 'int':
+                            return 'string';
+                    }
                     break;
                 case 'bool':
-                    return t1;
+                    switch(t2){
+                        case 'float':
+                            return 'float';
+                        case 'int':
+                            return 'int';
+                        case 'string':
+                            return 'string';
+                    }
+                    break;
 
             }
         let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, stateStack, `expected ${t1} but found ${t2}`));
@@ -347,6 +364,12 @@ class Listener extends listener {
             let e = new SemanticStartError(payloadCreator(ctx, this.state, `start should define`))
             fs.writeFileSync('.temp/symbolTable_output.json', json(e, null, 2), 'utf-8');
         } else {
+            for(let symbol of this.globalTable.symbols){
+                if(symbol.getChildScope() && !symbol.getChildScope().isImplemented){
+                    let e = new SemanticNotImplementedDeclaresError(payloadCreator(ctx, this.state, `${symbol.id} is declared bot has not implementation`))
+                    errors.push(e);
+                }
+            }
             let startScope = start.getChildScope();
             if (!(start !== 'error' && start.typeObj.type === 'function' && !startScope.symbols[1].typeObj.return && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return == true)) {
                 let e = new SemanticStartError(payloadCreator(ctx, this.state, `'(int)=function start()' is not defined`))
@@ -439,8 +462,14 @@ class Listener extends listener {
         // add function symbol to global table
         let result = this.globalTable.addSymbol(functionSymbol, ctx);
         if (result === 'error') {
-            let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${symbol.id} has already been declared before`));
-            errors.push(e);
+            let resultSymbol = this.globalTable.getSymbolInheritance(toText(ctx.ID()), false, false)
+            let checkSigniture = resultSymbol.getChildScope().sameDefine(mainArgsTypes, returnableArgsTypes);
+            if(checkSigniture === true){
+                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${toText(ctx.ID())} has already been declared before`));
+                errors.push(e);
+            } else {
+                this.globalTable.addSymbol(functionSymbol, true);
+            }
         }
 
         // add return symbols to function table
@@ -452,7 +481,7 @@ class Listener extends listener {
             }, functionTable.getNewOffset(), null);
             let result = functionTable.addSymbol(argSymbol, ctx);
             if (result === 'error') {
-                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${symbol.id} has already been declared before`));
+                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${toText(ctx.ID())} has already been declared before`));
                 errors.push(e);
             }
         });
@@ -466,7 +495,7 @@ class Listener extends listener {
             }, functionTable.getNewOffset(), null);
             let result = functionTable.addSymbol(argSymbol, ctx);
             if (result === 'error') {
-                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${symbol.id} has already been declared before`));
+                let e = new SemanticTypeDeclaredError(payloadCreator(ctx, this.state, `identifier ${toText(ctx.ID()).id} has already been declared before`));
                 errors.push(e);
             }
         });
@@ -474,8 +503,11 @@ class Listener extends listener {
     }
 
     exitArgsType(ctx) {
-        //TODO: arrays
-        ctx.typeObj = [ctx.type().typeObj]
+        if(ctx.LBRACK()){
+            
+        } else {
+            ctx.typeObj = [ctx.type().typeObj]
+        }
     }
 
     exitArgsArgs(ctx) {
@@ -604,7 +636,34 @@ class Listener extends listener {
             let e = new SemanticNotDeclaredReferenceError(payloadCreator(ctx, this.state, `reference ${id} has not been declared`))
             errors.push(e)
         }
-        //TODO: array
+        if(ref.expr()){
+            let arrayType = ref.expr()[0].typeObj.type
+            let dim = ref.expr().length;
+            let mainTypeObj = {dimension: dim, type:'list', width:ref.expr()[0].typeObj.value}
+            let innerTypeObj = mainTypeObj;
+            for(let ex of ref.expr()){
+                if(ex.typeObj.type != arrayType){
+                    let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expression in array should be as same type`));
+                    errors.push(e)
+                    return;
+                }
+                innerTypeObj.innerType = {
+                    dimension: --dim,
+                    type: ref.expr().top() == ex? ex.type: 'list',
+                    width: ex.typeObj.value
+                }
+                innerTypeObj = innerTypeObj.innerType;
+            }
+            if(symbol != 'error'){
+                if(mainTypeObj === symbol.typeObj){
+                    ctx.typeObj = mainTypeObj;
+                } else {
+                    let e = new SemanticTypeOfPartsOfAssignError(payloadCreator(ctx, this.state, `identifier ${id} is not list`))
+                    errors.push(e)
+                }
+            }
+            ctx.typeObj = mainTypeObj;
+        }
         ctx.symbol = symbol;
         if (ctx.postRef)
             ctx.postRef.table = symbol.getChildScope()
@@ -1004,7 +1063,7 @@ class Listener extends listener {
                 return;
             } else {
                 functionTable = new SymbolTable(functionTable.id, functionTable.typeObj, functionTable.parentScope);
-                ctx.parentCtx.symbol.addChildScope(functionTable);
+                ctx.parentCtx.symbol.addChildScope(functionTable, true);
             }
 
             // add return symbols to function table
@@ -1037,6 +1096,7 @@ class Listener extends listener {
                     return;
                 }
             });
+            functionTable.isImplemented = true;
             ctx.table = functionTable;
         } else if (this.state.top().name === 'forloop') {
             let blockParent = ctx.parentCtx.table;

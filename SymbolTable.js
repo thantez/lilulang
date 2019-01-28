@@ -9,9 +9,9 @@ class SymbolTable {
     this.symbols = [];
   }
 
-  addSymbol(symbol, ctx) {
+  addSymbol(symbol, differentSig) {
     for(let s of this.symbols){
-      if(symbol.id && symbol.id === s.id){
+      if(symbol.id && symbol.id === s.id && differentSig != true){
         return 'error';
       }
     }

@@ -45,6 +45,9 @@
     },
     "FunctionAllocated":{
       "message": "function should not be allocated"
+    },
+    "NotImplementedDeclares":{
+      "message":"declared components should have implementation"
     }
   }
  }

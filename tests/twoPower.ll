@@ -1,3 +1,8 @@
+declare{
+   C;
+   (int)=start();
+}
+
 (int x, int z)=function twoPower(int a){
    const int c = 2;
    if a == 1 {
@@ -45,6 +50,11 @@ type B : A{
       return;
    }
 
+   public (int plused) = function plusOne(bool adad){
+      plused = adad + 1;
+      return;
+   }
+
    protected (int minused) = function minusOne(int adad){
       minused = adad - 1;
       if minused == 0 {
@@ -78,7 +88,7 @@ type C : A{
    }
    (int x) = function y (float z){
       B b = allocate B();
-      x = b.plusOne(1);
+      x = b.plusOne(true);
       return;
    }
 }

@@ -371,7 +371,7 @@ class Listener extends listener {
                 }
             }
             let startScope = start.getChildScope();
-            if (!(start !== 'error' && start.typeObj.type === 'function' && !startScope.symbols[1].typeObj.return && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return == true)) {
+            if (!(start !== 'error' && start.typeObj.type === 'function' && startScope.symbols[1].typeObj.return === undefined && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return == true)) {
                 let e = new SemanticStartError(payloadCreator(ctx, this.state, `'(int)=function start()' is not defined`))
                 fs.writeFileSync('.temp/symbolTable_output.json', json(e, null, 2), 'utf-8');
             } else {
@@ -503,7 +503,7 @@ class Listener extends listener {
     }
 
     exitArgsType(ctx) {
-        if(ctx.LBRACK()){
+        if(ctx.LBRACK().length != 0){
             let dim = ctx.LBRACK().length
             let mainType = {
                 type: 'list',
@@ -531,7 +531,7 @@ class Listener extends listener {
     exitArgsArgs(ctx) {
         let argsType = ctx.args().typeObj;
         let newArgType = ctx.type().typeObj;
-        if(ctx.LBRACK()){
+        if(ctx.LBRACK().length != 0){
             let dim = ctx.LBRACK().length
             let mainType = {
                 type: 'list',
@@ -557,8 +557,8 @@ class Listener extends listener {
     }
 
     exitArgs_variableType(ctx) {
-        let typeObj = ctx.type().type;
-        if(ctx.LBRACK()){
+        let typeObj = ctx.type().typeObj;
+        if(ctx.LBRACK().length != 0){
             let dim = ctx.LBRACK().length
             let mainType = {
                 type: 'list',
@@ -586,7 +586,7 @@ class Listener extends listener {
     exitArgs_variableArgs_variable(ctx) {
         let argsType = ctx.args_variable().typeObj;
         let newArgType = ctx.type().typeObj;
-        if(ctx.LBRACK()){
+        if(ctx.LBRACK().length != 0){
             let dim = ctx.LBRACK().length
             let mainType = {
                 type: 'list',
@@ -634,7 +634,22 @@ class Listener extends listener {
             let vrType = vr.typeObj;
             vrType.preType = preType;
             if (vrType.type) {
-                if (vrType.type !== type) {
+                if (vrType.type === 'list'){
+                    let innerType = vrType.innerType;
+                    while(true){
+                        if(innerType.type != 'list'){
+                            break;
+                        }
+                        innerType = innerType.innerType;
+                    }
+                    if (innerType.type && innerType.type !== type) {
+                        let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${type} but found ${vrType.type}`))
+                        errors.push(e);
+                    } else if (!innerType.type) {
+                        innerType.type = type;
+                    }
+                }
+                else if (vrType.type !== type) {
                     let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${type} but found ${vrType.type}`))
                     errors.push(e);
                 }
@@ -677,7 +692,8 @@ class Listener extends listener {
         } else {
             ctx.typeObj = {}
         }
-        ctx.id = toText(ctx.ref());
+        ctx.id = toText(ctx.ref().ID());
+        ctx.typeObj = ctx.ref().typeObj;
         this.state.pop();
     }
 
@@ -710,12 +726,12 @@ class Listener extends listener {
             let e = new SemanticNotDeclaredReferenceError(payloadCreator(ctx, this.state, `reference ${id} has not been declared`))
             errors.push(e)
         }
-        if(ref.expr()){
-            let arrayType = ref.expr()[0].typeObj.type
-            let dim = ref.expr().length;
-            let mainTypeObj = {dimension: dim, type:'list', width:ref.expr()[0].typeObj.value}
+        if(ctx.LBRACK().length != 0){
+            let arrayType = ctx.expr()[0].typeObj.type
+            let dim = ctx.expr().length;
+            let mainTypeObj = {dimension: dim, type:'list', width:ctx.expr()[0].typeObj.value}
             let innerTypeObj = mainTypeObj;
-            for(let ex of ref.expr()){
+            for(let ex of ctx.expr()){
                 if(ex.typeObj.type != arrayType){
                     let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expression in array should be as same type`));
                     errors.push(e)
@@ -723,7 +739,7 @@ class Listener extends listener {
                 }
                 innerTypeObj.innerType = {
                     dimension: --dim,
-                    type: ref.expr().top() == ex? ex.type: 'list',
+                    type: ctx.expr().top() == ex? ex.type: 'list',
                     width: ex.typeObj.value
                 }
                 innerTypeObj = innerTypeObj.innerType;
@@ -873,23 +889,7 @@ class Listener extends listener {
         ctx.table = ctx.parentCtx.table;
     }
     exitParanList(ctx) {
-        let exprs = ctx.expr();
-        let mainTypeObj = exprs[0].typeObj;
-        let mainType = mainTypeObj.type
-        let subDim = mainTypeObj.dimension;
-        exprs.forEach(expr => {
-            let exType = expr.typeObj.type;
-            if (exType != mainType) {
-                let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${mainType} but found ${exType}`))
-                errors.push(e);
-            }
-        })
-        ctx.typeObj = {
-            dimension: subDim + 1,
-            width: exprs.length,
-            innerType: mainTypeObj,
-            type: 'list'
-        }
+        ctx.typeObj = ctx.getChild(0).typeObj
     }
 
     enterParanVar(ctx) {
@@ -987,22 +987,28 @@ class Listener extends listener {
     // #region list
 
     enterList(ctx) {
+        ctx.table = ctx.parentCtx.table
     }
 
     exitList(ctx) {
-        let listType = ctx.getChild(1).typeObj.type;
-        // 2 steps because of COMMA in list, skip child(0) and cild(length-1) because of '[]'
-        for (let i = 2; i < ctx.children.length - 1; i += 2) {
-            let itemType = ctx.getChild(i).typeObj.type
-            if (listType !== itemType) {
-                let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${listType} but found ${itemType}`))
+        let exprs = ctx.expr();
+        let mainTypeObj = exprs[0].typeObj;
+        let mainType = mainTypeObj.type
+        let subDim = mainTypeObj.dimension;
+        exprs.forEach(expr => {
+            let exType = expr.typeObj.type;
+            if (exType != mainType) {
+                let e = new SemanticOperandTypeMismatchError(payloadCreator(ctx, this.state, `expected ${mainType} but found ${exType}`))
                 errors.push(e);
+                return;
             }
-        }
+            
+        })
         ctx.typeObj = {
-            type: 'list',
-            value: toText(ctx),
-            innerType: 'int'
+            dimension: subDim + 1,
+            width: exprs.length,
+            innerType: mainTypeObj,
+            type: 'list'
         }
     }
 

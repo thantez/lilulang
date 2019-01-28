@@ -27,6 +27,21 @@
      },
      "NotDeclaredFunction":{
        "message":"function has not been declared in this scope"
-     }
-   }
+     },
+     "CountOfPartsOfAssign":{
+       "message": "the count of parties of assign are not equal"
+     },
+     "TypeOfPartsOfAssign":{
+       "message":"the type of parties of assign are not equal"
+     },
+     "ConstAssign":{
+       "message":"you cant assign a new value to constant or define it without value"
+    },
+    "ReturnWithoutAssign":{
+       "message":"you should assign a value to your return variables of function"
+    },
+    "StmtExpr":{
+      "message":"you can't use multi value in expressions of statement statement"
+    }
+  }
  }

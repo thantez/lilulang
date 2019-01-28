@@ -1,17 +1,19 @@
-(int a) = function start() {
-   int x;
-   read(x);
-   a = twoPower(x);
-   write(a);
-   return;
-}
-
-(int x)=function twoPower(int a){
+(int x, int z)=function twoPower(int a){
+   const int c = 2;
    if a == 1 {
       x = 1;
    } else {
       a = a-1;
-      x = twoPower(a)*2;
+      (x, z) = twoPower(a)*(2);
    }
+   return;
+}
+
+(int a) = function start() {
+   int x = 2;
+   int b;
+   read(x);
+   (a, b) = twoPower(x);
+   write(a);
    return;
 }

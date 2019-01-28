@@ -104,13 +104,12 @@ expr:
 	| expr BITOR expr							# exprExprBitor
 	| expr AND expr								# exprExprAnd
 	| expr OR expr								# exprExprOr
-	| parans											 # exprParen
+	| parans											 # exprParan
 	;
 
 
 parans:
 		LPAREN expr RPAREN #paranParan
-		| ID								#paranID
 		| const_val					#paranConst
 		| ALLOCATE handle_call	#paranAllocate
 		| func_call						#paranFunc
@@ -140,7 +139,7 @@ def: ft_def+;
 assign: leftAssign ASSIGN expr;
 
 leftAssign: variable #singleAssign
-					| LPAREN variable ( COMMA variable)* RPAREN #multiAssign
+					| LPAREN variable ( COMMA variable)+ RPAREN #multiAssign
 					; 
 
 unary_op: SUB

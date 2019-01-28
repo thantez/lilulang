@@ -504,7 +504,25 @@ class Listener extends listener {
 
     exitArgsType(ctx) {
         if(ctx.LBRACK()){
-            
+            let dim = ctx.LBRACK().length
+            let mainType = {
+                type: 'list',
+                dimension: dim,
+                innerType: {}
+            }
+            let innerTypeObj = mainType.innerType
+            for(let i = dim - 1; i >= 0; i--){
+                innerTypeObj = {
+                    type: 'list',
+                    dimension: dim,
+                    innerType: {}
+                }
+                if(i-1 == 0)
+                    innerTypeObj.innerType = ctx.type().typeObj
+                else
+                    innerTypeObj.innerType = innerTypeObj;
+            }
+            ctx.typeObj = [mainType]
         } else {
             ctx.typeObj = [ctx.type().typeObj]
         }
@@ -513,28 +531,84 @@ class Listener extends listener {
     exitArgsArgs(ctx) {
         let argsType = ctx.args().typeObj;
         let newArgType = ctx.type().typeObj;
+        if(ctx.LBRACK()){
+            let dim = ctx.LBRACK().length
+            let mainType = {
+                type: 'list',
+                dimension: dim,
+                innerType: {}
+            }
+            let innerTypeObj = mainType.innerType
+            for(let i = dim - 1; i >= 0; i--){
+                innerTypeObj = {
+                    type: 'list',
+                    dimension: dim,
+                    innerType: {}
+                }
+                if(i-1 == 0)
+                    innerTypeObj.innerType = newArgType;
+                else
+                    innerTypeObj.innerType = innerTypeObj;
+            }
+            newArgType = mainType;
+        }
         argsType.push(newArgType)
         ctx.typeObj = argsType;
     }
 
     exitArgs_variableType(ctx) {
-        //TODO: arrays
-        let typeObj = {
-            type: ctx.type().typeObj.type,
-            id: toText(ctx.ID())
-        };
+        let typeObj = ctx.type().type;
+        if(ctx.LBRACK()){
+            let dim = ctx.LBRACK().length
+            let mainType = {
+                type: 'list',
+                dimension: dim,
+                innerType: {}
+            }
+            let innerTypeObj = mainType.innerType
+            for(let i = dim - 1; i >= 0; i--){
+                innerTypeObj = {
+                    type: 'list',
+                    dimension: dim,
+                    innerType: {}
+                }
+                if(i-1 == 0)
+                    innerTypeObj.innerType = typeObj
+                else
+                    innerTypeObj.innerType = innerTypeObj;
+            }
+            typeObj = [mainType]
+        }
+        typeObj.id = toText(ctx.ID());
         ctx.typeObj = [typeObj]
     }
 
     exitArgs_variableArgs_variable(ctx) {
         let argsType = ctx.args_variable().typeObj;
-        let newArg = ctx.type();
-        let newId = ctx.ID();
-        let newArgTypeObj = {
-            type: newArg.typeObj.type,
-            id: toText(newId)
-        };
-        argsType.push(newArgTypeObj)
+        let newArgType = ctx.type().typeObj;
+        if(ctx.LBRACK()){
+            let dim = ctx.LBRACK().length
+            let mainType = {
+                type: 'list',
+                dimension: dim,
+                innerType: {}
+            }
+            let innerTypeObj = mainType.innerType
+            for(let i = dim - 1; i >= 0; i--){
+                innerTypeObj = {
+                    type: 'list',
+                    dimension: dim,
+                    innerType: {}
+                }
+                if(i-1 == 0)
+                    innerTypeObj.innerType = newArgType;
+                else
+                    innerTypeObj.innerType = innerTypeObj;
+            }
+            newArgType = mainType;
+        }
+        newArgType.id = toText(ctx.ID())
+        argsType.push(newArgType)
         ctx.typeObj = argsType;
     }
 
@@ -1364,7 +1438,7 @@ class Listener extends listener {
         if (!LBRACK) {
             LBRACK = [];
         }
-        if (ctx.LBRACK().length != symbol.typeObj.dimension) {
+        if (ctx.LBRACK().length != type.dimension) {
             let e = new SemanticDestructError(payloadCreator(ctx, this.state, `destruct can be used with same type about array`));
             errors.push(e)
             return;

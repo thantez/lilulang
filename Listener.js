@@ -18,7 +18,8 @@ const {
     SemanticTypeOfPartsOfAssignError,
     SemanticConstAssignError,
     SemanticReturnWithoutAssignError,
-    SemanticStmtExprError
+    SemanticStmtExprError,
+    SemanticFunctionAllocatedError
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 

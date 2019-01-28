@@ -106,7 +106,7 @@ class SymbolTable {
     return this.symbols.length === 0;
   }
 
-  sameDefine(mainArgsTypes, returnableArgsTypes){
+  sameDefine(mainArgsTypes, returnableArgsTypes) {
     let sameSymbols = this.symbols;
     let sameMainArgsTypes = [];
     let sameReturnableArgsTypes = [];
@@ -127,12 +127,12 @@ class SymbolTable {
       return false;
     }
 
-    for(i in mainArgsTypes){
+    for(let i in mainArgsTypes){
       if(!(mainArgsTypes[i] === sameMainArgsTypes[i]))
         return false;
     }
 
-    for(i in returnableArgsTypes){
+    for(let i in returnableArgsTypes){
       if(!(returnableArgsTypes[i] === sameReturnableArgsTypes[i]))
         return false;
     }

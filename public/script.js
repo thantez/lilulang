@@ -96,28 +96,44 @@ function handleCompile() {
       text: rawCodeText
     })
   }).then(res => res.json())
-    .then(data => console.log(data));
+    .then(resolveCompileResult);
+}
+
+function resolveCompileResult(result) {
+  console.log(result);
 
   output.innerHTML = '';
 
-//   console.log(presCodeText);
+  if (result.id) {
+    // Successful compile
+    output.innerHTML = "Successful compile! (Display Symbol Table?)"
+  } else if (result.code) {
+    // Generic Syntax Error
+    output.innerHTML = `${result.code}: ${result.payload.message}`;
 
-//   // get('span:nth-child(2)',editorPres).style.background = 'red'
+    if (result.payload.line && result.payload.column) {
+      output.innerHTML += ` @ ${result.payload.line}:${result.payload.column}`;
 
-//   for (let e in response) {
-//     const err = response[e];
+      const line = get(`.line:nth-child(${result.payload.line})`, editorPres);
+      line.classList.add('error-line');
+    }
+  } else if (result["0"]) {
+    // Compile errors
+    for (let key in result) {
+      const error = result[key];
 
+      output.innerHTML += `${error.code}: ${error.message}`;
 
-//     const line = err.stack[err.stack.length - 1];
-//     const lineNumber = line.state[0]
-//     const lineNode = get(`.line:nth-child(${lineNumber.line})`, editorPres);
-//     lineNode.style.background = 'red';
+      const topError = error.stack[error.stack.length - 1];
+      output.innerHTML += ` @ ${topError.state[0].line}:${topError.state[0].column}\n\n`;
 
-//     const msg = `Code: ${err.code}
-// Message: ${err.message}\n\n`;
-
-//     output.innerHTML += msg;
-//   }
+      const line = get(`.line:nth-child(${topError.state[0].line})`, editorPres);
+      line.classList.add('error-line');
+    }
+  } else {
+    // Failed to comiple, result = {}
+    output.innerHTML = "Ops! Something went wrong in compilation process... :("
+  }
 }
 
 

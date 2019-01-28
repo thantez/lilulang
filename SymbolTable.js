@@ -10,11 +10,11 @@ class SymbolTable {
   }
 
   addSymbol(symbol, ctx) {
-    this.symbols.forEach(s => {
+    for(let s of this.symbols){
       if(symbol.id && symbol.id === s.id){
         return 'error';
       }
-    });
+    }
     this.symbols.push(symbol);
     this.size = this.size + symbol.getWidth();
   }
@@ -61,21 +61,83 @@ class SymbolTable {
     }
   }
 
-  getSymbolInheritance(id){
-    for (let symbol of this.symbols){
-      if(symbol.id===id){
-        return symbol;
-      }
+  getSymbolInheritance(id, thisi, superi){
+    let scopeType = 'none'
+    if(thisi == true){
+      scopeType = 'this'
+    } else if (superi == true) {
+      scopeType = 'super'
     }
-    if(this.parentScope){
-      return this.parentScope.getSymbolInheritance(id);
-    } else {
-      return 'error'
+    return this._getSymbolInheritance(id, true, scopeType)
+  }
+
+  _getSymbolInheritance(id, privacy, responder) {
+    {
+      for (let symbol of this.symbols){
+        if(symbol.id===id){
+          switch(responder){
+            case 'this':
+              if(privacy){
+                return symbol;
+              }
+              break;
+            case 'super':
+              if(symbol.accmod != 'private'){
+                return symbol;
+              }
+              break;
+            default:
+              if(symbol.accmod === 'public' || symbol.accmod == undefined){
+                return symbol;
+              }
+              break;
+          }
+        }
+      }
+      if(this.parentScope){
+        return this.parentScope.getSymbolInheritance(id, false, responder);
+      } else {
+        return 'error'
+      }
     }
   }
 
   isEmpty(){
     return this.symbols.length === 0;
+  }
+
+  sameDefine(mainArgsTypes, returnableArgsTypes) {
+    let sameSymbols = this.symbols;
+    let sameMainArgsTypes = [];
+    let sameReturnableArgsTypes = [];
+
+    for(let symbol of sameSymbols){
+      let sameType = symbol.typeObj;
+      if(sameType.return === true){
+        sameReturnableArgsTypes.push(sameType)
+      } else if (sameType.return === false) {
+        sameMainArgsTypes.push(sameType)
+      }
+      else {
+        break;
+      }
+    }
+
+    if(mainArgsTypes.length != sameMainArgsTypes.length || returnableArgsTypes.length != sameReturnableArgsTypes.length){
+      return false;
+    }
+
+    for(let i in mainArgsTypes){
+      if(!(mainArgsTypes[i] === sameMainArgsTypes[i]))
+        return false;
+    }
+
+    for(let i in returnableArgsTypes){
+      if(!(returnableArgsTypes[i] === sameReturnableArgsTypes[i]))
+        return false;
+    }
+
+    return true;
   }
 }
 
@@ -103,7 +165,7 @@ class Symbol {
     this.typeObj = typeObj;
     this.offset = offset;
     this.childScope = childScopeSymbolTable;
-
+  
     switch(typeObj.type){
       case 'float':
         this.width = 8;
@@ -113,7 +175,6 @@ class Symbol {
           this.width = (typeObj.value.length + 1)*2;
         } else {
           this.width = 2;
-          console.log(typeObj)
         }
         break;
       default:

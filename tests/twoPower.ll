@@ -4,7 +4,7 @@
       x = 1;
    } else {
       a = a-1;
-      (x, z) = twoPower(a)*(2);
+      (x, z) = twoPower(a)*2;
    }
    return;
 }
@@ -21,5 +21,51 @@
 }
 
 type A{
-   public int a = 2;
+   public int adad = 2;
+
+   (int plused) = function plusOne(int adad){
+      plused = adad + 1;
+      return;
+   }
+
+   protected (int minused) = function minusOne(int adad){
+      minused = adad - 1;
+      if minused == 0 {
+         minused = this.adad;
+      }
+      return;
+   }
+}
+
+type B : A{
+   int adad2 = 3;
+
+   public (int plused) = function plusOne(int adad){
+      plused = adad + 1;
+      return;
+   }
+
+   protected (int minused) = function minusOne(int adad){
+      minused = adad - 1;
+      if minused == 0 {
+         minused = this.adad;
+      }
+      return;
+   }
+
+   protected (int minus) = function minusOne(int adad, float adad2){
+
+   }
+}
+
+type C : A{
+   (int x) = function f2 (float y){
+      x = 3;
+      return;
+   }
+   (int x) = function y (float z){
+      B b = allocate B();
+      x = b.plusOne(1);
+      return;
+   }
 }

@@ -7,7 +7,6 @@ const path = require('path');
 
 const {
     SemanticOperandTypeMismatchError,
-    SemanticFatherTypeimplementationError,
     SemanticScopeError,
     SemanticDestructError,
     SemanticTypeDeclaredError,
@@ -23,6 +22,8 @@ const {
 } = require(path.resolve('error', 'helper'));
 const errors = [];
 
+
+// #region code
 function errorOutput() {
     let obj = {}
     for (i in errors) {
@@ -40,7 +41,6 @@ function errorOutput() {
     return obj;
 }
 
-// #region code
 if (!Array.prototype.top) {
     Array.prototype.top = function () {
         return this[this.length - 1];
@@ -51,6 +51,15 @@ if (!Array.prototype.top) {
 // #region functions
 
 //get text of a node in sample shape
+function have(stack, name){
+    for(let el of stack){
+        if(el.name === name){
+            return true;
+        }
+    }
+    return false;
+}
+
 function toText(ctx) {
     if (ctx !== null) {
         return ctx.getText()
@@ -331,20 +340,27 @@ class Listener extends listener {
     }
 
     exitProgram(ctx) {
-        this.state.pop();
-        let start = this.globalTable.getSymbolInheritance('start')
-        let startScope = start.getChildScope();
-        if (!(start !== 'error' && start.typeObj.type === 'function' && !startScope.symbols[1].typeObj.return && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return == true)) {
-            let e = new SemanticStartError(payloadCreator(ctx, this.state, `'(int)=function start()' is not defined`))
+        
+        let start = this.globalTable.getSymbolInheritance('start', false, false)
+        if(start === 'error'){
+            let e = new SemanticStartError(payloadCreator(ctx, this.state, `start should define`))
             fs.writeFileSync('.temp/symbolTable_output.json', json(e, null, 2), 'utf-8');
         } else {
-            if (errors.length != 0) {
-                let outputError = errorOutput()
-                fs.writeFileSync('.temp/symbolTable_output.json', json(outputError, null, 2), 'utf-8');
+            let startScope = start.getChildScope();
+            if (!(start !== 'error' && start.typeObj.type === 'function' && !startScope.symbols[1].typeObj.return && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return == true)) {
+                let e = new SemanticStartError(payloadCreator(ctx, this.state, `'(int)=function start()' is not defined`))
+                fs.writeFileSync('.temp/symbolTable_output.json', json(e, null, 2), 'utf-8');
             } else {
-                fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
+                if (errors.length != 0) {
+                    let outputError = errorOutput()
+                    fs.writeFileSync('.temp/symbolTable_output.json', json(outputError, null, 2), 'utf-8');
+                } else {
+                    fs.writeFileSync('.temp/symbolTable_output.json', json(this.globalTable, null, 2), 'utf-8');
+                }
             }
         }
+        
+        this.state.pop();
     }
 
     // #region program
@@ -522,7 +538,14 @@ class Listener extends listener {
                     value: undefined
                 }
             }
-            let vrSymbol = new Symbol(id, typeObj, table.getNewOffset(), null);
+            let childScope = null;
+            if(typeObj.value && typeObj.value.includes('allocate')){
+                let result = this.globalTable.getTypeInRoot(typeObj.type)
+                if(result != 'error'){
+                    childScope = result;
+                }
+            }
+            let vrSymbol = new Symbol(id, typeObj, table.getNewOffset(), childScope);
             if(type === 'string' && vrType.value){
                 vrSymbol.width = ((vrType.value.length) - 1) * 2;
             }
@@ -533,9 +556,6 @@ class Listener extends listener {
                 errors.push(e);
             }
         });
-
-        //if()
-
     }
 
     enterVariable_val(ctx) {
@@ -546,6 +566,7 @@ class Listener extends listener {
     exitVariable_val(ctx) {
         if (ctx.expr()) {
             ctx.typeObj = ctx.expr().typeObj
+            ctx.alloc = ctx.expr().alloc
         } else {
             ctx.typeObj = {}
         }
@@ -554,13 +575,16 @@ class Listener extends listener {
     }
 
     enterRef(ctx) {
-        ctx.table = ctx.table || ctx.parentCtx.table
+        ctx.table = ctx.table || ctx.parentCtx.table;
+        ctx.alloc = ctx.parentCtx.alloc;
+        ctx.thisi = ctx.parentCtx.thisi;
+        ctx.superi = ctx.parentCtx.superi;
     }
 
     exitRef(ctx) {
         let id = toText(ctx.ID());
         let table = ctx.table
-        let symbol = table.getSymbolInheritance(id);
+        let symbol = table.getSymbolInheritance(id, ctx.thisi, ctx.superi);
         ctx.typeObj = {
             type: symbol.type,
             value: toText(ctx.ID())
@@ -686,10 +710,14 @@ class Listener extends listener {
     }
 
     enterExprParan(ctx) {
+        ctx.alloc = ctx.parentCtx.alloc
         ctx.table = ctx.parentCtx.table;
     }
     exitExprParan(ctx) {
         ctx.typeObj = ctx.getChild(0).typeObj;
+        ctx.symbol = ctx.getChild(0).symbol;
+        ctx.id = ctx.getChild(0).id;
+        ctx.alloc = ctx.getChild(0).alloc;
     }
 
     enterParanNil(ctx) {
@@ -724,6 +752,7 @@ class Listener extends listener {
     }
 
     enterParanVar(ctx) {
+        ctx.alloc = ctx.parentCtx.alloc
         ctx.table = ctx.parentCtx.table
     }
     exitParanVar(ctx) {
@@ -738,23 +767,22 @@ class Listener extends listener {
     }
 
     enterParanAllocate(ctx) {
+        ctx.alloc = 'yes'
         ctx.table = ctx.parentCtx.table;
     }
     exitParanAllocate(ctx) {
-        let table = ctx.table;
         let allocatedType = ctx.getChild(1);
-        let typeScope = allocatedType.typeScope;
-        let id = allocatedType.id;
-        let typeObj = allocatedType.typeObj;
-        let allocatedSymbol = new Symbol(id, typeObj, table.getNewOffset(), typeScope)
-        let result = table.addSymbol(allocatedSymbol, ctx);
-        if(result === 'error'){
-            let e = new SemanticReDefinedError(payloadCreator(ctx, this.state, `alocated symbol has been defined before`));
+        let id = toText(allocatedType.ID());
+        let result = this.globalTable.getTypeInRoot(id);
+        if(result != 'error'){
+            ctx.typeObj = {
+                type: id,
+                value: toText(ctx)
+            }
+        } else if (allocatedType.typeObj.type === 'function') {
+            let e = new SemanticFunctionAllocatedError(payloadCreator(ctx, this.state, `function ${id} can't allocate.`))
             errors.push(e);
         }
-        ctx.symbol = allocatedSymbol;
-        ctx.typeObj = typeObj;
-        ctx.id = id;
     }
 
     enterParanConst(ctx) {
@@ -911,7 +939,8 @@ class Listener extends listener {
             parentTable = this.globalTable;
         }
         // creation for function table, pointing to global table by parent scope
-        functionSymbol = parentTable.getSymbolInheritance(toText(ctx.ID()));
+
+        functionSymbol = parentTable.getSymbolInheritance(toText(ctx.ID()), true, false);
         if (functionSymbol === 'error') {
             functionTable = new SymbolTable(toText(ctx.ID()), {
                 type: 'function',
@@ -935,6 +964,7 @@ class Listener extends listener {
         } else {
             functionTable = functionSymbol.getChildScope();
         }
+        ctx.symbol = functionSymbol;
         ctx.table = functionTable;
         this.state.push(cursorCreator('fundef', ctx));
     }
@@ -958,7 +988,16 @@ class Listener extends listener {
                 mainArgsTypes = [];
             }
             let functionTable = ctxP.table;
-            //TODO: BUG: when place '.' instead of ',' it throw mainArgs is undefined!
+
+            let checkSigniture = functionTable.sameDefine(mainArgsTypes, returnableArgsTypes);
+            if(checkSigniture == true){
+                let e = new SemanticReDefinedError(payloadCreator(ctx, this.state, `a function same as ${functionTable.id} with this signiture is defined in this type`))
+                errors.push(e);
+                return;
+            } else {
+                functionTable = new SymbolTable(functionTable.id, functionTable.typeObj, functionTable.parentScope);
+                ctx.parentCtx.symbol.addChildScope(functionTable);
+            }
 
             // add return symbols to function table
             returnableArgsTypes.forEach(typeObj => {
@@ -969,8 +1008,9 @@ class Listener extends listener {
                 }, functionTable.getNewOffset(), null);
                 let result = functionTable.addSymbol(argSymbol, ctxP);
                 if (result === 'error') {
-                    let e = new SemanticTypeDeclaredError(payloadCreator(ctxP, this.state, `identifier ${symbol.id} has already been declared before`));
+                    let e = new SemanticTypeDeclaredError(payloadCreator(ctxP, this.state, `identifier ${argSymbol.id} has already been declared before`));
                     errors.push(e);
+                    return;
                 }
             });
 
@@ -984,8 +1024,9 @@ class Listener extends listener {
                 argSymbol.width = 4;
                 let result = functionTable.addSymbol(argSymbol, ctxP);
                 if (result === 'error') {
-                    let e = new SemanticTypeDeclaredError(payloadCreator(ctxP, this.state, `identifier ${symbol.id} has already been declared before`));
+                    let e = new SemanticTypeDeclaredError(payloadCreator(ctxP, this.state, `identifier ${argSymbol.id} has already been declared before`));
                     errors.push(e);
+                    return;
                 }
             });
             ctx.table = functionTable;
@@ -1050,20 +1091,25 @@ class Listener extends listener {
     enterVariable(ctx) {
         let refs = ctx.ref();
         if (ctx.THIS()) {
-            let typeScope = ctx.parentCtx.table.parentScope;
-            if (!typeScope) {
-                let e = new Error(payloadCreator(ctx, this.state, `Are you in the Type? so don't use this lexer.`))
-                errors.push(e)
+            ctx.table = ctx.parentCtx.table;
+            if(!have(this.state, 'typedef')){
+                let e = new SemanticScopeError(payloadCreator(ctx, this.state, `this should use in type defination`))
+                errors.push(e);
+                return;
             }
-            refs[0].table = typeScope;
+            ctx.thisi = true;
         } else if (ctx.SUPER()) {
-            let typeScope = ctx.parentCtx.table.parentScope.parentScope;
-            if (!typeScope) {
-                let e = new Error(payloadCreator(ctx, this.state, `Are you in the child Type? so don't use super lexer.`))
-                errors.push(e)
+            ctx.table = ctx.parentCtx.parentCtx.table;
+            if(!have(this.state, 'typedef')){
+                let e = new SemanticScopeError(payloadCreator(ctx, this.state, `this should use in type defination`))
+                errors.push(e);
+                return;
             }
-            refs[0].table = typeScope;
+            ctx.superi = true;
         } else {
+            if(have(this.state, 'typedef')){
+                ctx.superi = true;
+            }
             let funcScope = ctx.parentCtx.table;
             refs[0].table = funcScope;
         }
@@ -1211,7 +1257,7 @@ class Listener extends listener {
         ctx.table = ctx.parentCtx.table
     }
     exitStmtDESTRUCT(ctx) {
-        let symbol = ctx.table.getSymbolInheritance(toText(ctx.ID()))
+        let symbol = ctx.table.getSymbolInheritance(toText(ctx.ID()), false, false)
         if (symbol === 'error') {
             let e = new SemanticNotDeclaredReferenceError(payloadCreator(ctx, this.state, `identifier ${id} has not been declared`))
             errors.push(e);
@@ -1276,7 +1322,11 @@ class Listener extends listener {
     }
 
     enterHandle_call(ctx) {
+        ctx.alloc = ctx.parentCtx.alloc
         ctx.table = ctx.table || ctx.parentCtx.table;
+        let vr = ctx.parentCtx.alloc==='yes'? {}:( ctx.parentCtx.variable()? ctx.parentCtx.variable(): {});
+        ctx.thisi = vr.thisi;
+        ctx.superi = vr.superi;
     }
     exitHandle_call(ctx) {
         if (ctx.table == undefined)
@@ -1287,13 +1337,19 @@ class Listener extends listener {
         }
         let id = toText(ctx.ID())
         let table = ctx.table;
-        let symbol = table.getSymbolInheritance(id);
+        let scope;
+        let symbol = table.getSymbolInheritance(id, ctx.superi, ctx.thisi);
         if (symbol === 'error') {
-            let e = new SemanticNotDeclaredFunctionError(payloadCreator(ctx, this.state, `function ${id} have been not declared in this scope (in scope of ${table.id})`))
-            errors.push(e);
-            symbol = new Symbol(id, {}, -1, { symbols: [] })
+            scope = this.globalTable.getTypeInRoot(toText(ctx.ID()))
+            if (scope === 'error') {
+                let e = new SemanticNotDeclaredFunctionError(payloadCreator(ctx, this.state, `function ${id} have been not declared in this scope (in scope of ${table.id})`))
+                errors.push(e);
+                symbol = new Symbol(id, {}, -1, { symbols: [] })
+                scope = { symbols: [] };
+            }
+        } else {
+            scope = symbol.getChildScope();
         }
-        let scope = symbol.getChildScope();
         let typeObjArray = [];
         let i = 0;
         scope.symbols.forEach(s => {
@@ -1321,10 +1377,13 @@ class Listener extends listener {
             }
         });
         ctx.symbol = symbol;
-        ctx.typeObj = typeObjArray.length===0?{}:(typeObjArray.length===1?typeObjArray[0]:{array:typeObjArray})
+        ctx.typeObj = typeObjArray.length === 0 ? {} : (typeObjArray.length === 1 ? typeObjArray[0] : { array: typeObjArray })
     }
 
+    
+
     enterParams(ctx) {
+        ctx.alloc = ctx.parentCtx.alloc
         ctx.table = ctx.parentCtx.table;
     }
     exitParams(ctx) {

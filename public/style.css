@@ -164,6 +164,17 @@ code::-webkit-scrollbar-thumb,
   overflow-y: scroll;
 }
 
+.display-st-btn {
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.display-st-btn:hover {
+  text-decoration: underline;
+}
+
 #symbol-table-container {
   position: absolute;
   top: 0;

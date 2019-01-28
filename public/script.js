@@ -106,6 +106,20 @@ function handleCompile() {
     .then(resolveCompileResult);
 }
 
+function displaySymbolTable(json) {
+  symbolTable.style.display = "block";
+
+  get('.tree').innerHTML = JSONTree.create(json);
+  // Default fold all
+  const f = document.getElementsByClassName('jstFold');
+  for (let i = 1; i < f.length; i++) {
+    const it = f[i];
+    setTimeout(() => {
+      it.click();
+    }, 0);
+  }
+}
+
 function resolveCompileResult(result) {
   console.log(result);
 
@@ -113,18 +127,9 @@ function resolveCompileResult(result) {
 
   if (result.id) {
     // Successful compile
-    output.innerHTML = "Successful compile!"
-    symbolTable.style.display = "block";
-
-    get('.tree').innerHTML = JSONTree.create(result);
-    // Default fold all
-    const f = document.getElementsByClassName('jstFold');
-    for (let i = 1; i < f.length; i++) {
-      const it = f[i];
-      setTimeout(() => {
-        it.click();
-      }, 0);
-    }
+    output.innerHTML = "Successful compile! "
+    output.innerHTML += '<button class="display-st-btn">View Symbol Table</button>';
+    get('.display-st-btn').addEventListener('click', () => displaySymbolTable(result));
   } else if (result.code) {
     // Generic Syntax Error
     output.innerHTML = `${result.code}: ${result.payload.message}`;

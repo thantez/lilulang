@@ -26,7 +26,7 @@ declare{
 }
 
 type A{
-   public int adad = 2;
+   private int adad = 2;
 
    (int plused) = function plusOne(int adad){
       plused = adad + 1;
@@ -39,6 +39,12 @@ type A{
          minused = this.adad;
       }
       return;
+   }
+
+   function multipleTwo(int num) {
+      C c = allocate C();
+      int x = adad;
+      destruct c;
    }
 }
 

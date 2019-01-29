@@ -42,6 +42,12 @@
     },
     "StmtExpr":{
       "message":"you can't use multi value in expressions of statement statement"
+    },
+    "FunctionAllocated":{
+      "message": "function should not be allocated"
+    },
+    "NotImplementedDeclares":{
+      "message":"declared components should have implementation"
     }
   }
  }

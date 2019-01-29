@@ -95,7 +95,7 @@ class SymbolTable {
         }
       }
       if(this.parentScope){
-        return this.parentScope.getSymbolInheritance(id, false, responder);
+        return this.parentScope.getSymbolInheritance(id, (this.typeObj.type === 'userType' || privacy == false) ? false : true, responder);
       } else {
         return 'error'
       }

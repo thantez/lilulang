@@ -371,7 +371,8 @@ class Listener extends listener {
                 }
             }
             let startScope = start.getChildScope();
-            if (!(start !== 'error' && start.typeObj.type === 'function' && startScope.symbols[1].typeObj.return === undefined && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return == true)) {
+            if (!(start !== 'error' && start.typeObj.type === 'function' && startScope.symbols[0] && startScope.symbols[0].typeObj.type === 'int' && startScope.symbols[0].typeObj.return == true && ((startScope.symbols.length > 1 && startScope.symbols[1].typeObj.return == undefined) || (startScope.symbols.length == 1)))) {
+                
                 let e = new SemanticStartError(payloadCreator(ctx, this.state, `'(int)=function start()' is not defined`))
                 fs.writeFileSync('.temp/symbolTable_output.json', json(e, null, 2), 'utf-8');
             } else {
@@ -1267,7 +1268,7 @@ class Listener extends listener {
     enterVariable(ctx) {
         let refs = ctx.ref();
         if (ctx.THIS()) {
-            ctx.table = ctx.parentCtx.parentCtx.table;
+            ctx.table = ctx.parentCtx.table;
             if(!have(this.state, 'typedef')){
                 let e = new SemanticScopeError(payloadCreator(ctx, this.state, `this should use in type defination`))
                 errors.push(e);
@@ -1275,7 +1276,7 @@ class Listener extends listener {
             }
             ctx.thisi = true;
         } else if (ctx.SUPER()) {
-            ctx.table = ctx.parentCtx.parentCtx.table;
+            ctx.table = ctx.parentCtx.table.parentScope;
             if(!have(this.state, 'typedef')){
                 let e = new SemanticScopeError(payloadCreator(ctx, this.state, `this should use in type defination`))
                 errors.push(e);
@@ -1441,19 +1442,28 @@ class Listener extends listener {
         }
         let type = symbol.typeObj.type;
         let LBRACK = ctx.LBRACK()
-        if (!LBRACK) {
+        if (LBRACK.length == 0) {
             LBRACK = [];
         }
-        if (ctx.LBRACK().length != type.dimension) {
+        let dim = symbol.typeObj.dimension || 0;
+        if (ctx.LBRACK().length != dim) {
             let e = new SemanticDestructError(payloadCreator(ctx, this.state, `destruct can be used with same type about array`));
             errors.push(e)
             return;
         }
-        let userType = this.globalTable.getTypeInRoot(id)
-        if (userType.typeObj.type !== 'userType') {
+        let userType = this.globalTable.getTypeInRoot(symbol.typeObj.type)
+        if (userType.typeObj.type !== userType.id) {
             let e = new SemanticDestructError(payloadCreator(ctx, this.state, `destruct can be used with userTypes`));
             errors.push(e)
+        } else {
+            for (let i in ctx.table.symbols){
+                if(ctx.table.symbols[i].id === symbol.id) {
+                    ctx.table.symbols.splice(i, 1)
+                }
+            }
+            userType.size -= 4;
         }
+
     }
 
     enterStmtRETURN(ctx){
